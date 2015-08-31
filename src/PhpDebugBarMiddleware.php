@@ -3,6 +3,7 @@
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
+use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -67,7 +68,7 @@ class PhpDebugBarMiddleware
      */
     private function isHtmlResponse(ResponseInterface $response)
     {
-        return strpos($response->getHeaderLine('Content-Type'), 'text/html') !== false;
+        return $this->hasHeaderContains($response, 'Content-Type', 'text/html');
     }
 
     /**
@@ -77,6 +78,18 @@ class PhpDebugBarMiddleware
      */
     private function isHtmlAccepted(ServerRequestInterface $request)
     {
-        return strpos($request->getHeaderLine('Accept'), 'text/html') !== false;
+        return $this->hasHeaderContains($request, 'Accept', 'text/html');
+    }
+
+    /**
+     * @param MessageInterface $message
+     * @param string $headerName
+     * @param string $value
+     *
+     * @return bool
+     */
+    private function hasHeaderContains(MessageInterface $message, $headerName, $value)
+    {
+        return strpos($message->getHeaderLine($headerName), $value) !== false;
     }
 }
