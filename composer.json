@@ -1,0 +1,29 @@
+{
+    "name": "php-middleware/php-debug-bar",
+    "description": "PHP Debug bar middleware with PSR-7",
+    "type": "library",
+    "keywords": [
+        "debug",
+        "middleware",
+        "psr",
+        "psr-7"
+    ],
+    "require": {
+        "maximebf/debugbar": "^1.10",
+        "psr/http-message": "^1.0",
+        "zendframework/zend-diactoros": "^1.1.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.8.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpMiddleware\\PhpDebugBar\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpMiddlewareTest\\PhpDebugBar\\": "test/"
+        }
+    }
+}
