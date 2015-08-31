@@ -1,4 +1,4 @@
-# phpdebugbar middleware
+# phpdebugbar middleware [![Build Status](https://travis-ci.org/php-middleware/phpdebugbar.svg?branch=master)](https://travis-ci.org/php-middleware/phpdebugbar)
 PHP Debug bar middleware with PSR-7
 
 This middleware provide framework-agnostic possibility to attach [PHP Debug bar](http://phpdebugbar.com/) to your response (html on non-html!).
