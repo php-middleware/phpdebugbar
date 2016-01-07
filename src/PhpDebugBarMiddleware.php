@@ -10,6 +10,7 @@ use Psr\Http\Message\UriInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\Serializer;
+use Zend\Diactoros\Stream;
 
 /**
  * PhpDebugBarMiddleware
@@ -90,9 +91,8 @@ class PhpDebugBarMiddleware
             return;
         }
 
-        $staticResponse = new Response();
-        $staticResponse->getBody()->write(file_get_contents($fullPathToFile));
-
+        $stream = new Stream($fullPathToFile, 'r');
+        $staticResponse = new Response($stream);
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
 
         return $staticResponse->withHeader('Content-type', $contentType);
