@@ -32,13 +32,13 @@ class PhpDebugBarMiddleware
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable $out
+     * @param callable $next
      *
      * @return ResponseInterface
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $out = null)
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        $outResponse = $out($request, $response);
+        $outResponse = $next($request, $response);
 
         if (!$this->isHtmlAccepted($request)) {
             return $outResponse;
