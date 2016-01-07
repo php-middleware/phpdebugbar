@@ -80,4 +80,25 @@ class PhpDebugBarMiddlewareTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($response, $result);
         $this->assertSame("ResponseBodyRenderHeadRenderBody", (string) $result->getBody());
     }
+
+    public function testAppendsToEndOfHtmlResponse()
+    {
+        $html = '<html><head><title>Foo</title></head><body>Content</body>';
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = new Response\HtmlResponse($html);
+        $calledOut = false;
+        $outFunction = function ($request, $response) use (&$calledOut) {
+            $calledOut = true;
+            return $response;
+        };
+
+        $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
+        $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
+
+        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+
+        $this->assertTrue($calledOut, 'Out is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame($html . 'RenderHeadRenderBody', (string) $result->getBody());
+    }
 }

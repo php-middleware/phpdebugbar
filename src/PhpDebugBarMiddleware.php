@@ -48,7 +48,11 @@ class PhpDebugBarMiddleware
         $debugBarBody = $this->debugBarRenderer->render();
 
         if ($this->isHtmlResponse($outResponse)) {
-            $outResponse->getBody()->write($debugBarHead . $debugBarBody);
+            $body = $outResponse->getBody();
+            if (! $body->eof() && $body->isSeekable()) {
+                $body->seek(0, SEEK_END);
+            }
+            $body->write($debugBarHead . $debugBarBody);
 
             return $outResponse;
         }
