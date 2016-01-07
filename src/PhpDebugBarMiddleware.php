@@ -6,6 +6,8 @@ use DebugBar\JavascriptRenderer as DebugBarRenderer;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\Serializer;
 
@@ -38,6 +40,10 @@ class PhpDebugBarMiddleware
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $out = null)
     {
+        if ($staticFile = $this->getStaticFile($request->getUri())) {
+            return $staticFile;
+        }
+
         $outResponse = $out($request, $response);
 
         if (!$this->isHtmlAccepted($request)) {
@@ -63,6 +69,51 @@ class PhpDebugBarMiddleware
         $result = sprintf($template, $debugBarHead, $escapedOutResponseBody, $debugBarBody);
 
         return new HtmlResponse($result);
+    }
+
+    /**
+     * @param UriInterface $uri
+     *
+     * @return ResponseInterface|null
+     */
+    private function getStaticFile(UriInterface $uri)
+    {
+        if (strpos($uri->getPath(), $this->debugBarRenderer->getBaseUrl()) !== 0) {
+            return;
+        }
+
+        $pathToFile = substr($uri->getPath(), strlen($this->debugBarRenderer->getBaseUrl()));
+
+        $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
+
+        if (!file_exists($fullPathToFile)) {
+            return;
+        }
+
+        $staticResponse = new Response();
+        $staticResponse->getBody()->write(file_get_contents($fullPathToFile));
+
+        $contentType = $this->getContentTypeByFileName($fullPathToFile);
+
+        return $staticResponse->withHeader('Content-type', $contentType);
+    }
+
+    /**
+     * @param string $filename
+     *
+     * @return string
+     */
+    private function getContentTypeByFileName($filename)
+    {
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+
+        switch ($ext) {
+            case 'css':
+                return 'text/css';
+            case 'js':
+                return 'text/javascript';
+        }
+        return 'text/plain';
     }
 
     /**
