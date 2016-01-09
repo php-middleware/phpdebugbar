@@ -107,12 +107,21 @@ class PhpDebugBarMiddleware
     {
         $ext = pathinfo($filename, PATHINFO_EXTENSION);
 
-        switch ($ext) {
-            case 'css':
-                return 'text/css';
-            case 'js':
-                return 'text/javascript';
+        $map = [
+            'css' => 'text/css',
+            'js' => 'text/javascript',
+            'otf' => 'font/opentype',
+            'eot' => 'application/vnd.ms-fontobject',
+            'svg' => 'image/svg+xml',
+            'ttf' => 'application/font-sfnt',
+            'woff' => 'application/font-woff',
+            'woff2' => 'application/font-woff2',
+        ];
+
+        if (isset($map[$ext])) {
+            return $map[$ext];
         }
+
         return 'text/plain';
     }
 
