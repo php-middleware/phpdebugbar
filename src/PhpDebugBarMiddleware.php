@@ -6,8 +6,11 @@ use DebugBar\JavascriptRenderer as DebugBarRenderer;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
+use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\Serializer;
+use Zend\Diactoros\Stream;
 
 /**
  * PhpDebugBarMiddleware
@@ -38,6 +41,10 @@ class PhpDebugBarMiddleware
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
+        if ($staticFile = $this->getStaticFile($request->getUri())) {
+            return $staticFile;
+        }
+
         $outResponse = $next($request, $response);
 
         if (!$this->isHtmlAccepted($request)) {
@@ -63,6 +70,59 @@ class PhpDebugBarMiddleware
         $result = sprintf($template, $debugBarHead, $escapedOutResponseBody, $debugBarBody);
 
         return new HtmlResponse($result);
+    }
+
+    /**
+     * @param UriInterface $uri
+     *
+     * @return ResponseInterface|null
+     */
+    private function getStaticFile(UriInterface $uri)
+    {
+        if (strpos($uri->getPath(), $this->debugBarRenderer->getBaseUrl()) !== 0) {
+            return;
+        }
+
+        $pathToFile = substr($uri->getPath(), strlen($this->debugBarRenderer->getBaseUrl()));
+
+        $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
+
+        if (!file_exists($fullPathToFile)) {
+            return;
+        }
+
+        $stream = new Stream($fullPathToFile, 'r');
+        $staticResponse = new Response($stream);
+        $contentType = $this->getContentTypeByFileName($fullPathToFile);
+
+        return $staticResponse->withHeader('Content-type', $contentType);
+    }
+
+    /**
+     * @param string $filename
+     *
+     * @return string
+     */
+    private function getContentTypeByFileName($filename)
+    {
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+
+        $map = [
+            'css' => 'text/css',
+            'js' => 'text/javascript',
+            'otf' => 'font/opentype',
+            'eot' => 'application/vnd.ms-fontobject',
+            'svg' => 'image/svg+xml',
+            'ttf' => 'application/font-sfnt',
+            'woff' => 'application/font-woff',
+            'woff2' => 'application/font-woff2',
+        ];
+
+        if (isset($map[$ext])) {
+            return $map[$ext];
+        }
+
+        return 'text/plain';
     }
 
     /**

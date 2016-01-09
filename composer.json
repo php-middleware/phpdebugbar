@@ -15,7 +15,8 @@
         "zendframework/zend-diactoros": "^1.1.3"
     },
     "require-dev": {
-        "phpunit/phpunit": "^4.8.6"
+        "phpunit/phpunit": "^4.8.6",
+        "mikey179/vfsStream": "^1.6"
     },
     "autoload": {
         "psr-4": {
