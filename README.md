@@ -8,22 +8,29 @@ This middleware provide framework-agnostic possibility to attach [PHP Debug bar]
 ```json
 {
     "require": {
-        "php-middleware/php-debug-bar": "^1.0.0"
+        "php-middleware/php-debug-bar": "^1.1.0"
     }
 }
 ```
 
-To build this middleware you need to injecting inside `PhpDebugBarMiddleware` instance `DebugBar\JavascriptRenderer` (you can get it from `DebugBar\StandardDebugBar`) and add middleware to your middleware runner.
+To build this middleware you need to injecting inside `PhpDebugBarMiddleware` instance `DebugBar\JavascriptRenderer` (you can get it from `DebugBar\StandardDebugBar`) and add middleware to your middleware runner. Or use default factory.
 
 ```php
 $debugbar = new DebugBar\StandardDebugBar();
-$debugbarRenderer = $debugbar->getJavascriptRenderer();
+$debugbarRenderer = $debugbar->getJavascriptRenderer('/phpdebugbar');
 $middleware = new PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware($debugbarRenderer);
+
+// OR
+
+$factory = PhpMiddleware\PhpDebugBar\PhpDebugBarMiddlewareFactory();
+$middleware = $factory();
 
 $app = new MiddlewareRunner();
 $app->add($middleware);
 $app->run($request, $response);
 ```
+
+You don't need to copy any static assets from phpdebugbar vendor!
 
 ## It's just works with any modern php framework!
 
