@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
+use Zend\Diactoros\Response\RedirectResponse;
 use Zend\Diactoros\Response\Serializer;
 use Zend\Diactoros\Stream;
 
@@ -34,8 +35,8 @@ class PhpDebugBarMiddleware
 
     /**
      * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
+     * @param ResponseInterface      $response
+     * @param callable               $next
      *
      * @return ResponseInterface
      */
@@ -47,7 +48,7 @@ class PhpDebugBarMiddleware
 
         $outResponse = $next($request, $response);
 
-        if (!$this->isHtmlAccepted($request)) {
+        if (!$this->isHtmlAccepted($request) || $this->isRedirectResponse($outResponse)) {
             return $outResponse;
         }
 
@@ -64,10 +65,10 @@ class PhpDebugBarMiddleware
             return $outResponse;
         }
 
-        $outResponseBody = Serializer::toString($outResponse);
-        $template = '<html><head>%s</head><body><h1>DebugBar</h1><p>Response:</p><pre>%s</pre>%s</body></html>';
+        $outResponseBody        = Serializer::toString($outResponse);
+        $template               = '<html><head>%s</head><body><h1>DebugBar</h1><p>Response:</p><pre>%s</pre>%s</body></html>';
         $escapedOutResponseBody = htmlspecialchars($outResponseBody);
-        $result = sprintf($template, $debugBarHead, $escapedOutResponseBody, $debugBarBody);
+        $result                 = sprintf($template, $debugBarHead, $escapedOutResponseBody, $debugBarBody);
 
         return new HtmlResponse($result);
     }
@@ -91,9 +92,9 @@ class PhpDebugBarMiddleware
             return;
         }
 
-        $stream = new Stream($fullPathToFile, 'r');
+        $stream         = new Stream($fullPathToFile, 'r');
         $staticResponse = new Response($stream);
-        $contentType = $this->getContentTypeByFileName($fullPathToFile);
+        $contentType    = $this->getContentTypeByFileName($fullPathToFile);
 
         return $staticResponse->withHeader('Content-type', $contentType);
     }
@@ -108,13 +109,13 @@ class PhpDebugBarMiddleware
         $ext = pathinfo($filename, PATHINFO_EXTENSION);
 
         $map = [
-            'css' => 'text/css',
-            'js' => 'text/javascript',
-            'otf' => 'font/opentype',
-            'eot' => 'application/vnd.ms-fontobject',
-            'svg' => 'image/svg+xml',
-            'ttf' => 'application/font-sfnt',
-            'woff' => 'application/font-woff',
+            'css'   => 'text/css',
+            'js'    => 'text/javascript',
+            'otf'   => 'font/opentype',
+            'eot'   => 'application/vnd.ms-fontobject',
+            'svg'   => 'image/svg+xml',
+            'ttf'   => 'application/font-sfnt',
+            'woff'  => 'application/font-woff',
             'woff2' => 'application/font-woff2',
         ];
 
@@ -147,13 +148,25 @@ class PhpDebugBarMiddleware
 
     /**
      * @param MessageInterface $message
-     * @param string $headerName
-     * @param string $value
+     * @param string           $headerName
+     * @param string           $value
      *
      * @return bool
      */
     private function hasHeaderContains(MessageInterface $message, $headerName, $value)
     {
         return strpos($message->getHeaderLine($headerName), $value) !== false;
+    }
+
+    /**
+     * Returns a boolean TRUE for if the response is a redirect.
+     * 
+     * @param MessageInterface $message
+     *
+     * @return bool
+     */
+    private function isRedirectResponse(ResponseInterface $response)
+    {
+        return $response instanceof RedirectResponse;
     }
 }
