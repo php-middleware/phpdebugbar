@@ -9,7 +9,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
-use Zend\Diactoros\Response\RedirectResponse;
 use Zend\Diactoros\Response\Serializer;
 use Zend\Diactoros\Stream;
 
@@ -48,7 +47,7 @@ class PhpDebugBarMiddleware
 
         $outResponse = $next($request, $response);
 
-        if (!$this->isHtmlAccepted($request) || $this->isRedirectResponse($outResponse)) {
+        if (!$this->isHtmlAccepted($request) || $this->isRedirect($outResponse)) {
             return $outResponse;
         }
 
@@ -159,14 +158,19 @@ class PhpDebugBarMiddleware
     }
 
     /**
-     * Returns a boolean TRUE for if the response is a redirect.
+     * Returns a boolean TRUE for if the response has redirect status code.
+     * 
+     * Five common HTTP status codes indicates a redirection beginning from 301.
+     * 304 not modified and 305 use proxy are not redirects.
+     * 
+     * @see https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#3xx_Redirection
      * 
      * @param MessageInterface $message
      *
      * @return bool
      */
-    private function isRedirectResponse(ResponseInterface $response)
+    private function isRedirect(ResponseInterface $response)
     {
-        return $response instanceof RedirectResponse;
+        return in_array($response->getStatusCode(), [301, 302, 303, 307, 308]);
     }
 }
