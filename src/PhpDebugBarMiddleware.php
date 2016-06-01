@@ -41,7 +41,7 @@ class PhpDebugBarMiddleware
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
     {
-        if ($staticFile = $this->getStaticFile($request->getUri())) {
+        if ($staticFile = $this->getStaticFile($request->getRequestTarget())) {
             return $staticFile;
         }
 
@@ -73,17 +73,18 @@ class PhpDebugBarMiddleware
     }
 
     /**
-     * @param UriInterface $uri
+     * @param string $uri
      *
      * @return ResponseInterface|null
      */
-    private function getStaticFile(UriInterface $uri)
+    private function getStaticFile($uri)
     {
-        if (strpos($uri->getPath(), $this->debugBarRenderer->getBaseUrl()) !== 0) {
+        $uri = preg_replace('/(.*)\/$/', '$1', $uri);
+        if (strpos($uri, $this->debugBarRenderer->getBaseUrl()) !== 0) {
             return;
         }
 
-        $pathToFile = substr($uri->getPath(), strlen($this->debugBarRenderer->getBaseUrl()));
+        $pathToFile = substr($uri, strlen($this->debugBarRenderer->getBaseUrl()));
 
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
 
