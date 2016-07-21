@@ -83,13 +83,23 @@ class PhpDebugBarMiddleware
             return;
         }
 
-        $pathToFile = substr($uri->getPath(), strlen($this->debugBarRenderer->getBaseUrl()));
+        if (method_exists($uri, 'getBasePath')) {
+            if (empty($uri->getBasePath())) {
+                return;
+            }
+            $path = $uri->getBasePath() ?: $uri->getPath();
+        } else {
+            $path = $uri->getPath();
+        }
+
+        $pathToFile = substr($path, strlen($this->debugBarRenderer->getBaseUrl()));
 
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
 
         if (!file_exists($fullPathToFile)) {
             return;
         }
+        $fullPathToFile = str_replace('/', DIRECTORY_SEPARATOR, $fullPathToFile);
 
         $stream = new Stream($fullPathToFile, 'r');
         $staticResponse = new Response($stream);
