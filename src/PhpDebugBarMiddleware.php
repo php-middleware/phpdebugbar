@@ -83,11 +83,15 @@ class PhpDebugBarMiddleware
             return;
         }
 
-        if (empty($uri->getBasePath())) {
-            return;
+        if (method_exists($uri, 'getBasePath')) {
+            if (empty($uri->getBasePath())) {
+                return;
+            }
+            $path = $uri->getBasePath() ?: $uri->getPath();
+        } else {
+            $path = $uri->getPath();
         }
 
-        $path = $uri->getBasePath() ?: $uri->getPath();
         $pathToFile = substr($path, strlen($this->debugBarRenderer->getBaseUrl()));
 
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
