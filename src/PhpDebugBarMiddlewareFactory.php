@@ -4,14 +4,9 @@ namespace PhpMiddleware\PhpDebugBar;
 
 use Interop\Container\ContainerInterface;
 use ArrayObject;
-use DebugBar\DebugBar;
 use DebugBar\StandardDebugBar;
 use DebugBar\JavascriptRenderer;
 use DebugBar\DataCollector\ConfigCollector;
-use DebugBar\DataCollector\PDO\TraceablePDO;
-use DebugBar\DataCollector\PDO\PDOCollector;
-use Zend\Db\Adapter\AdapterInterface;
-use Zend\Db\Adapter\Driver\Pdo\Pdo;
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
 
 /**
@@ -61,12 +56,6 @@ class PhpDebugBarMiddlewareFactory
         // Config Collectors
         $debugBar->addCollector(new ConfigCollector($config));
         
-        // Db profiler
-        if ($container->has(AdapterInterface::class) && isset($config['db']['driver'])) {
-            $dbAdapter = $container->get(AdapterInterface::class);
-            $this->prepareDbCollector($dbAdapter, $debugBar);
-        }
-        
         // Collectors
         $collectors = (isset($debugBarConfig['collectors']) && is_array($debugBarConfig['collectors']))
             ? $debugBarConfig['collectors']
@@ -87,22 +76,5 @@ class PhpDebugBarMiddlewareFactory
         $javascriptRenderer->setOptions($debugBarOptions);
 
         return new PhpDebugBarMiddleware($javascriptRenderer);
-    }
-    
-    /**
-     * Prepare database collector
-     * 
-     * @param AdapterInterface $adapter
-     * @param DebugBar $debugbar
-     */
-    protected function prepareDbCollector(AdapterInterface $adapter, DebugBar $debugbar)
-    {
-        $driver = $adapter->getDriver();
-        if ($driver instanceof Pdo) {
-            $pdo = $driver->getConnection()->getResource();
-            $traceablePdo = new TraceablePDO($pdo);
-            $pdoCollector = new PDOCollector($traceablePdo);
-            $debugbar->addCollector($pdoCollector);
-        }
     }
 }
