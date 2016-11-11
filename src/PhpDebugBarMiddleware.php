@@ -7,6 +7,7 @@ use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Slim\Http\Uri;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\Serializer;
@@ -109,7 +110,7 @@ class PhpDebugBarMiddleware
     private function extractPath(UriInterface $uri)
     {
         // Slim3 compatibility
-        if (method_exists($uri, 'getBasePath')) {
+        if ($uri instanceof Uri) {
             $basePath = $uri->getBasePath();
             if (!empty($basePath)) {
                 return $basePath;
