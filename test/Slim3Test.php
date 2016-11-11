@@ -46,7 +46,6 @@ class Slim3Test extends PHPUnit_Framework_TestCase
     {
         $app = new App();
         $app->getContainer()['environment'] = function() use ($server) {
-            $server['SCRIPT_NAME'] = '/index.php';
             return new Environment($server);
         };
 
