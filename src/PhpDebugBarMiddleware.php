@@ -80,30 +80,30 @@ class PhpDebugBarMiddleware
     private function getStaticFile(UriInterface $uri)
     {
         $path = $this->extractPath($uri);
-        
+
         if (strpos($path, $this->debugBarRenderer->getBaseUrl()) !== 0) {
             return;
         }
 
         $pathToFile = substr($path, strlen($this->debugBarRenderer->getBaseUrl()));
-        
+
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
-        
+
         if (!file_exists($fullPathToFile)) {
             return;
         }
 
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
         $stream = new Stream($fullPathToFile, 'r');
-        
+
         return new Response($stream, 200, [
             'Content-type' => $contentType,
         ]);
     }
-    
+
     /**
      * @param UriInterface $uri
-     * 
+     *
      * @return string
      */
     private function extractPath(UriInterface $uri)
