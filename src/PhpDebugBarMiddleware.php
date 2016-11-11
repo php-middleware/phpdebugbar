@@ -79,33 +79,43 @@ class PhpDebugBarMiddleware
      */
     private function getStaticFile(UriInterface $uri)
     {
-        if (strpos($uri->getPath(), $this->debugBarRenderer->getBaseUrl()) !== 0) {
+        $path = $this->extractPath($uri);
+        
+        if (strpos($path, $this->debugBarRenderer->getBaseUrl()) !== 0) {
             return;
-        }
-
-        if (method_exists($uri, 'getBasePath')) {
-            if (empty($uri->getBasePath())) {
-                return;
-            }
-            $path = $uri->getBasePath() ?: $uri->getPath();
-        } else {
-            $path = $uri->getPath();
         }
 
         $pathToFile = substr($path, strlen($this->debugBarRenderer->getBaseUrl()));
-
+        
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
-
+        
         if (!file_exists($fullPathToFile)) {
             return;
         }
-        $fullPathToFile = str_replace('/', DIRECTORY_SEPARATOR, $fullPathToFile);
 
-        $stream = new Stream($fullPathToFile, 'r');
-        $staticResponse = new Response($stream);
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
-
-        return $staticResponse->withHeader('Content-type', $contentType);
+        $stream = new Stream($fullPathToFile, 'r');
+        
+        return new Response($stream, 200, [
+            'Content-type' => $contentType,
+        ]);
+    }
+    
+    /**
+     * @param UriInterface $uri
+     * 
+     * @return string
+     */
+    private function extractPath(UriInterface $uri)
+    {
+        // Slim3 compatibility
+        if (method_exists($uri, 'getBasePath')) {
+            $basePath = $uri->getBasePath();
+            if (!empty($basePath)) {
+                return $basePath;
+            }
+        }
+        return $uri->getPath();
     }
 
     /**
