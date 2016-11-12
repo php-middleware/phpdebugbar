@@ -9,7 +9,7 @@ use DebugBar\StandardDebugBar;
  *
  * @author Witold Wasiczko <witold@wasiczko.pl>
  */
-class PhpDebugBarMiddlewareFactory
+final class PhpDebugBarMiddlewareFactory
 {
     public function __invoke()
     {

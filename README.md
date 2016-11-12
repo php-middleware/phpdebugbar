@@ -5,12 +5,8 @@ This middleware provide framework-agnostic possibility to attach [PHP Debug bar]
 
 ## Installation
 
-```json
-{
-    "require": {
-        "php-middleware/php-debug-bar": "^1.1.0"
-    }
-}
+```
+composer require php-middleware/php-debug-bar
 ```
 
 To build this middleware you need to injecting inside `PhpDebugBarMiddleware` instance `DebugBar\JavascriptRenderer` (you can get it from `DebugBar\StandardDebugBar`) and add middleware to your middleware runner. Or use default factory.
@@ -32,12 +28,24 @@ $app->run($request, $response);
 
 You don't need to copy any static assets from phpdebugbar vendor!
 
+### How to install on Slim 3?
+
+Add existing factory to container:
+
+```php
+$container['debugbar_middleware'] = new PhpMiddleware\PhpDebugBar\PhpDebugBarMiddlewareFactory();
+```
+
+and add middleware from container to app:
+
+```php
+$app->add($app->getContainer()->get('debugbar_middleware'));
+```
+
 ## It's just works with any modern php framework!
 
 Middleware tested on:
-* [Expressive](https://github.com/zendframework/zend-expressive)
-
-Middleware should works with:
+* [Zend Expressive](https://github.com/zendframework/zend-expressive)
 * [Slim 3.x](https://github.com/slimphp/Slim)
 
 And any other modern framework [supported middlewares and PSR-7](https://mwop.net/blog/2015-01-08-on-http-middleware-and-psr-7.html).

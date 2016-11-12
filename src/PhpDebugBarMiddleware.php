@@ -7,6 +7,7 @@ use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Slim\Http\Uri;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\Serializer;
@@ -79,11 +80,13 @@ class PhpDebugBarMiddleware
      */
     private function getStaticFile(UriInterface $uri)
     {
-        if (strpos($uri->getPath(), $this->debugBarRenderer->getBaseUrl()) !== 0) {
+        $path = $this->extractPath($uri);
+
+        if (strpos($path, $this->debugBarRenderer->getBaseUrl()) !== 0) {
             return;
         }
 
-        $pathToFile = substr($uri->getPath(), strlen($this->debugBarRenderer->getBaseUrl()));
+        $pathToFile = substr($path, strlen($this->debugBarRenderer->getBaseUrl()));
 
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
 
@@ -91,11 +94,29 @@ class PhpDebugBarMiddleware
             return;
         }
 
-        $stream = new Stream($fullPathToFile, 'r');
-        $staticResponse = new Response($stream);
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
+        $stream = new Stream($fullPathToFile, 'r');
 
-        return $staticResponse->withHeader('Content-type', $contentType);
+        return new Response($stream, 200, [
+            'Content-type' => $contentType,
+        ]);
+    }
+
+    /**
+     * @param UriInterface $uri
+     *
+     * @return string
+     */
+    private function extractPath(UriInterface $uri)
+    {
+        // Slim3 compatibility
+        if ($uri instanceof Uri) {
+            $basePath = $uri->getBasePath();
+            if (!empty($basePath)) {
+                return $basePath;
+            }
+        }
+        return $uri->getPath();
     }
 
     /**
