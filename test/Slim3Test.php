@@ -2,30 +2,27 @@
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
-use DebugBar\StandardDebugBar;
-use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
+use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddlewareFactory;
 use Slim\App;
 use Slim\Http\Environment;
 
 final class Slim3Test extends AbstractMiddlewareRunnerTest
 {
-    protected function dispatchApplication(array $server)
+    protected function dispatchApplication(array $server, array $pipe = [])
     {
         $app = new App();
         $app->getContainer()['environment'] = function() use ($server) {
             return new Environment($server);
         };
 
-        $debugbar = new StandardDebugBar();
-        $debugbarRenderer = $debugbar->getJavascriptRenderer('/phpdebugbar');
-        $middleware = new PhpDebugBarMiddleware($debugbarRenderer);
+        $middlewareFactory = new PhpDebugBarMiddlewareFactory();
+        $middleware = $middlewareFactory();
+
         $app->add($middleware);
 
-        $app->get('/hello', function ($request, $response, $args) {
-            $response->getBody()->write('Hello!');
-
-            return $response;
-        });
+        foreach ($pipe as $pattern => $middleware) {
+            $app->get($pattern, $middleware);
+        }
 
         return $app->run(true);
     }

@@ -4,15 +4,22 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 
 use PHPUnit_Framework_TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 abstract class AbstractMiddlewareRunnerTest extends PHPUnit_Framework_TestCase
 {
+
     final public function testAppendJsIntoHtmlContent()
     {
         $response = $this->dispatchApplication([
             'REQUEST_URI' => '/hello',
             'REQUEST_METHOD' => 'GET',
             'HTTP_ACCEPT' => 'text/html',
+        ], [
+            '/hello' => function (ServerRequestInterface $request, ResponseInterface $response, $next) {
+                $response->getBody()->write('Hello!');
+                return $response;
+            },
         ]);
 
         $responseBody = (string) $response->getBody();
@@ -49,5 +56,5 @@ abstract class AbstractMiddlewareRunnerTest extends PHPUnit_Framework_TestCase
     /**
      * @return ResponseInterface
      */
-    abstract protected function dispatchApplication(array $server);
+    abstract protected function dispatchApplication(array $server, array $pipe = []);
 }
