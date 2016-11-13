@@ -2,8 +2,6 @@
 
 namespace PhpMiddleware\PhpDebugBar;
 
-use DebugBar\StandardDebugBar;
-
 /**
  * Default, simple factory for middleware
  *
@@ -13,8 +11,8 @@ final class PhpDebugBarMiddlewareFactory
 {
     public function __invoke()
     {
-        $debugbar = new StandardDebugBar();
-        $renderer = $debugbar->getJavascriptRenderer('/phpdebugbar');
+        $rendererFactory = new JavascriptRendererFactory();
+        $renderer = $rendererFactory();
 
         return new PhpDebugBarMiddleware($renderer);
     }
