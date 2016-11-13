@@ -28,6 +28,20 @@ $app->run($request, $response);
 
 You don't need to copy any static assets from phpdebugbar vendor!
 
+### How to install on Zend Expressive?
+
+Use [mtymek/expressive-config-manager](https://github.com/mtymek/expressive-config-manager) and add
+`PhpMiddleware\PhpDebugBar\ConfigProvider` class name:
+
+```php
+$configManager = new \Zend\Expressive\ConfigManager\ConfigManager([
+    \PhpMiddleware\PhpDebugBar\ConfigProvider::class,
+    new \Zend\Expressive\ConfigManager\PhpFileProvider('config/autoload/{{,*.}global,{,*.}local}.php'),
+]);
+```
+
+more [about config manager](https://zendframework.github.io/zend-expressive/cookbook/modular-layout/).
+
 ### How to install on Slim 3?
 
 Add existing factory to container:
