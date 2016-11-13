@@ -6,7 +6,9 @@ return [
             'javascript_renderer' => [
                 'base_url' => '/phpdebugbar',
             ],
-            'collectors' => [],
+            'collectors' => [
+                DebugBar\DataCollector\ConfigCollector::class,
+            ],
             'storage' => null,
         ],
     ],
