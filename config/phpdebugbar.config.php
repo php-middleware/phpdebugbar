@@ -7,7 +7,7 @@ return [
                 'base_url' => '/phpdebugbar',
             ],
             'collectors' => [],
-            'storage' => '',
+            'storage' => null,
         ],
     ],
 ];
