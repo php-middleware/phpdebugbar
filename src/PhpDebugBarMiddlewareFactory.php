@@ -2,20 +2,19 @@
 
 namespace PhpMiddleware\PhpDebugBar;
 
-use DebugBar\StandardDebugBar;
+use DebugBar\JavascriptRenderer;
+use Interop\Container\ContainerInterface;
 
-/**
- * Default, simple factory for middleware
- *
- * @author Witold Wasiczko <witold@wasiczko.pl>
- */
 final class PhpDebugBarMiddlewareFactory
 {
-    public function __invoke()
+    public function __invoke(ContainerInterface $container = null)
     {
-        $debugbar = new StandardDebugBar();
-        $renderer = $debugbar->getJavascriptRenderer('/phpdebugbar');
-
+        if ($container === null || !$container->has(JavascriptRenderer::class)) {
+            $rendererFactory = new JavascriptRendererFactory();
+            $renderer = $rendererFactory($container);
+        } else {
+            $renderer = $container->get(JavascriptRenderer::class);
+        }
         return new PhpDebugBarMiddleware($renderer);
     }
 }

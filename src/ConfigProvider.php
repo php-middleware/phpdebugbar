@@ -12,9 +12,10 @@ final class ConfigProvider
 
     public function __invoke()
     {
-        return [
-            'dependencies' => include __DIR__ . '/../config/dependency.config.php',
-            'middleware_pipeline' => include __DIR__ . '/../config/zend-expressive.middleware_pipeline.config.php',
-        ];
+        $config = include __DIR__ . '/../config/phpdebugbar.config.php';
+        $config['dependencies'] = include __DIR__ . '/../config/dependency.config.php';
+        $config['middleware_pipeline'] = include __DIR__ . '/../config/zend-expressive.middleware_pipeline.config.php';
+
+        return $config;
     }
 }

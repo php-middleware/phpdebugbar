@@ -4,10 +4,12 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 
 use Interop\Container\ContainerInterface;
 use PhpMiddleware\PhpDebugBar\ConfigProvider;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\EmitterInterface;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\Expressive\Container\ApplicationFactory;
 use Zend\ServiceManager\ServiceManager;
+use Zend\Stratigility\Http\ResponseInterface;
 
 final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
 {
@@ -18,6 +20,24 @@ final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
         parent::setUp();
 
         $this->testEmitter = new TestEmitter();
+    }
+
+    final public function testContainsConfigCollectorOutput()
+    {
+        $response = $this->dispatchApplication([
+            'REQUEST_URI' => '/hello',
+            'REQUEST_METHOD' => 'GET',
+            'HTTP_ACCEPT' => 'text/html',
+        ], [
+            '/hello' => function (ServerRequestInterface $request, ResponseInterface $response, $next) {
+                $response->getBody()->write('Hello!');
+                return $response;
+            },
+        ]);
+
+        $responseBody = (string) $response->getBody();
+
+        $this->assertContains('DebugBar\\\DataCollector\\\ConfigCollector', $responseBody);
     }
 
     protected function dispatchApplication(array $server, array $pipe = [])
