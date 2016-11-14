@@ -56,6 +56,27 @@ and add middleware from container to app:
 $app->add($app->getContainer()->get('debugbar_middleware'));
 ```
 
+### How to configure using existing factories?
+
+Put array with configuration into `config` service in your container:
+
+```php
+<?php
+return [
+    'phpmiddleware' => [
+        'phpdebugbar' => [
+            'javascript_renderer' => [
+                'base_url' => '/phpdebugbar',
+            ],
+            'collectors' => [
+                DebugBar\DataCollector\ConfigCollector::class, // Service names of collectors
+            ],
+            'storage' => null, // Service name of storage
+        ],
+    ],
+];
+```
+
 ## It's just works with any modern php framework!
 
 Middleware tested on:
