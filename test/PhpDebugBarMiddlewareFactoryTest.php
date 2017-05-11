@@ -4,12 +4,12 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddlewareFactory;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @author Witold Wasiczko <witold@wasiczko.pl>
  */
-class PhpDebugBarMiddlewareFactoryTest extends PHPUnit_Framework_TestCase
+class PhpDebugBarMiddlewareFactoryTest extends TestCase
 {
     public function testFactory()
     {

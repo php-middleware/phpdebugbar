@@ -2,11 +2,11 @@
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-abstract class AbstractMiddlewareRunnerTest extends PHPUnit_Framework_TestCase
+abstract class AbstractMiddlewareRunnerTest extends TestCase
 {
 
     final public function testAppendJsIntoHtmlContent()
