@@ -1,7 +1,7 @@
 # phpdebugbar middleware [![Build Status](https://travis-ci.org/php-middleware/phpdebugbar.svg?branch=master)](https://travis-ci.org/php-middleware/phpdebugbar)
-PHP Debug bar middleware with PSR-7
+PHP Debug bar PSR-15 middleware with PSR-7
 
-This middleware provide framework-agnostic possibility to attach [PHP Debug bar](http://phpdebugbar.com/) to your response (html on non-html!).
+This middleware provide framework-agnostic possibility to attach [PHP Debug Bar](http://phpdebugbar.com/) to your response (html on non-html!).
 
 ## Installation
 
@@ -18,7 +18,7 @@ $middleware = new PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware($debugbarRende
 
 // OR
 
-$factory = PhpMiddleware\PhpDebugBar\PhpDebugBarMiddlewareFactory();
+$factory = new PhpMiddleware\PhpDebugBar\PhpDebugBarMiddlewareFactory();
 $middleware = $factory();
 
 $app = new MiddlewareRunner();
@@ -61,7 +61,6 @@ $app->add($app->getContainer()->get('debugbar_middleware'));
 Put array with configuration into `config` service in your container:
 
 ```php
-<?php
 return [
     'phpmiddleware' => [
         'phpdebugbar' => [

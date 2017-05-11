@@ -3,7 +3,7 @@
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 final class PhpDebugBarMiddlewareFactory
 {

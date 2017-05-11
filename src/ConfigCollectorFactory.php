@@ -3,7 +3,7 @@
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\DataCollector\ConfigCollector;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 final class ConfigCollectorFactory
 {

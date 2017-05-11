@@ -2,8 +2,8 @@
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
-use Interop\Container\ContainerInterface;
 use PhpMiddleware\PhpDebugBar\ConfigProvider;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\EmitterInterface;

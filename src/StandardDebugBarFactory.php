@@ -3,7 +3,7 @@
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\StandardDebugBar;
-use Interop\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 
 final class StandardDebugBarFactory
 {
