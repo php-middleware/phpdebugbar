@@ -6,7 +6,8 @@ final class ConfigProvider
 {
     public static function getConfig()
     {
-        return (new self())();
+        $self = new self();
+        return $self()();
     }
 
     public function __invoke()
