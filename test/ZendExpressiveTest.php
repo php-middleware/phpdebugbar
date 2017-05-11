@@ -2,26 +2,17 @@
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
-use Interop\Container\ContainerInterface;
 use PhpMiddleware\PhpDebugBar\ConfigProvider;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\EmitterInterface;
 use Zend\Diactoros\ServerRequestFactory;
 use Zend\Expressive\Container\ApplicationFactory;
 use Zend\ServiceManager\ServiceManager;
-use Zend\Stratigility\Http\ResponseInterface;
 
 final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
 {
-    private $testEmitter;
-
-    protected function setUp()
-    {
-        parent::setUp();
-
-        $this->testEmitter = new TestEmitter();
-    }
-
     final public function testContainsConfigCollectorOutput()
     {
         $response = $this->dispatchApplication([
@@ -58,7 +49,7 @@ final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
 
         $app->run($serverRequest);
 
-        return $this->testEmitter->getResponse();
+        return $container->get(EmitterInterface::class)->getResponse();
     }
 
     /**
@@ -71,7 +62,7 @@ final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
 
         $serviceManagerConfig = $config['dependencies'];
         $serviceManagerConfig['services']['config'] = $config;
-        $serviceManagerConfig['services'][EmitterInterface::class] = $this->testEmitter;
+        $serviceManagerConfig['services'][EmitterInterface::class] = new TestEmitter();
 
         return new ServiceManager($serviceManagerConfig);
     }

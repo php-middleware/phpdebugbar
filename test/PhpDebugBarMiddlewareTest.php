@@ -5,7 +5,7 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 use DebugBar\JavascriptRenderer;
 use org\bovigo\vfs\vfsStream;
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Uri;
@@ -15,7 +15,7 @@ use Zend\Diactoros\Uri;
  *
  * @author Witold Wasiczko <witold@wasiczko.pl>
  */
-class PhpDebugBarMiddlewareTest extends PHPUnit_Framework_TestCase
+class PhpDebugBarMiddlewareTest extends TestCase
 {
     protected $debugbarRenderer;
     protected $middleware;
