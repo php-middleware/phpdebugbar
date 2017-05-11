@@ -3,6 +3,9 @@
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
+use Interop\Http\ServerMiddleware\DelegateInterface;
+use Interop\Http\ServerMiddleware\MiddlewareInterface;
+use PhpMiddleware\DoublePassCompatibilityTrait;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,64 +21,71 @@ use Zend\Diactoros\Stream;
  *
  * @author Witold Wasiczko <witold@wasiczko.pl>
  */
-class PhpDebugBarMiddleware
+class PhpDebugBarMiddleware implements MiddlewareInterface
 {
-    /**
-     * @var DebugBarRenderer
-     */
+    use DoublePassCompatibilityTrait;
+
     protected $debugBarRenderer;
 
-    /**
-     * @param DebugBarRenderer $debugbarRenderer
-     */
     public function __construct(DebugBarRenderer $debugbarRenderer)
     {
         $this->debugBarRenderer = $debugbarRenderer;
     }
 
     /**
-     * @param ServerRequestInterface $request
-     * @param ResponseInterface $response
-     * @param callable $next
-     *
-     * @return ResponseInterface
+     * @inheritDoc
      */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next)
+    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
     {
         if ($staticFile = $this->getStaticFile($request->getUri())) {
             return $staticFile;
         }
 
-        $outResponse = $next($request, $response);
+        $response = $delegate->process($request);
 
         if (!$this->isHtmlAccepted($request)) {
-            return $outResponse;
+            return $response;
         }
 
-        $debugBarHead = $this->debugBarRenderer->renderHead();
-        $debugBarBody = $this->debugBarRenderer->render();
-
-        if ($this->isHtmlResponse($outResponse)) {
-            $body = $outResponse->getBody();
-            if (! $body->eof() && $body->isSeekable()) {
-                $body->seek(0, SEEK_END);
-            }
-            $body->write($debugBarHead . $debugBarBody);
-
-            return $outResponse;
+        if ($this->isHtmlResponse($response)) {
+            return $this->attachDebugBarToResponse($response);
         }
+        return $this->prepareHtmlResponseWithDebugBar($response);
+    }
 
-        $outResponseBody = Serializer::toString($outResponse);
+    /**
+     * @return HtmlResponse
+     */
+    private function prepareHtmlResponseWithDebugBar(ResponseInterface $response)
+    {
+        $head = $this->debugBarRenderer->renderHead();
+        $body = $this->debugBarRenderer->render();
+        $outResponseBody = Serializer::toString($response);
         $template = '<html><head>%s</head><body><h1>DebugBar</h1><p>Response:</p><pre>%s</pre>%s</body></html>';
         $escapedOutResponseBody = htmlspecialchars($outResponseBody);
-        $result = sprintf($template, $debugBarHead, $escapedOutResponseBody, $debugBarBody);
+        $result = sprintf($template, $head, $escapedOutResponseBody, $body);
 
         return new HtmlResponse($result);
     }
 
     /**
-     * @param UriInterface $uri
-     *
+     * @return ResponseInterface
+     */
+    private function attachDebugBarToResponse(ResponseInterface $response)
+    {
+        $head = $this->debugBarRenderer->renderHead();
+        $body = $this->debugBarRenderer->render();
+        $responseBody = $response->getBody();
+
+        if (! $responseBody->eof() && $responseBody->isSeekable()) {
+            $responseBody->seek(0, SEEK_END);
+        }
+        $responseBody->write($head . $body);
+
+        return $response;
+    }
+
+    /**
      * @return ResponseInterface|null
      */
     private function getStaticFile(UriInterface $uri)
@@ -139,11 +149,7 @@ class PhpDebugBarMiddleware
             'woff2' => 'application/font-woff2',
         ];
 
-        if (isset($map[$ext])) {
-            return $map[$ext];
-        }
-
-        return 'text/plain';
+        return isset($map[$ext]) ? $map[$ext] : 'text/plain';
     }
 
     /**
