@@ -36,11 +36,10 @@ class PhpDebugBarMiddleware implements MiddlewareInterface
     protected $excludeNonHtmlContent;
 
     /**
-     * PhpDebugBarMiddleware constructor.
      * @param DebugBarRenderer $debugbarRenderer
      * @param bool $excludeNonHtmlContent Whether to disable debugbar on content-types != 'test/html'
      */
-    public function __construct(DebugBarRenderer $debugbarRenderer, $excludeNonHtmlContent=true)
+    public function __construct(DebugBarRenderer $debugbarRenderer, $excludeNonHtmlContent=false)
     {
         $this->debugBarRenderer = $debugbarRenderer;
         $this->excludeNonHtmlContent = $excludeNonHtmlContent;
