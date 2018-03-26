@@ -3,13 +3,12 @@
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
-use Interop\Http\ServerMiddleware\DelegateInterface;
-use Interop\Http\ServerMiddleware\MiddlewareInterface;
 use PhpMiddleware\DoublePassCompatibilityTrait;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
+use Psr\Http\Server\MiddlewareInterface;
 use Slim\Http\Uri;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -23,8 +22,6 @@ use Zend\Diactoros\Stream;
  */
 class PhpDebugBarMiddleware implements MiddlewareInterface
 {
-    use DoublePassCompatibilityTrait;
-
     protected $debugBarRenderer;
 
     public function __construct(DebugBarRenderer $debugbarRenderer)
@@ -35,13 +32,13 @@ class PhpDebugBarMiddleware implements MiddlewareInterface
     /**
      * @inheritDoc
      */
-    public function process(ServerRequestInterface $request, DelegateInterface $delegate)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
         if ($staticFile = $this->getStaticFile($request->getUri())) {
             return $staticFile;
         }
 
-        $response = $delegate->process($request);
+        $response = $handler->handle($request);
 
         if (!$this->isHtmlAccepted($request)) {
             return $response;
