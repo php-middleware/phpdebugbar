@@ -1,9 +1,9 @@
 <?php
+declare (strict_types=1);
 
 namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
-use PhpMiddleware\DoublePassCompatibilityTrait;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -21,7 +21,7 @@ use Zend\Diactoros\Stream;
  *
  * @author Witold Wasiczko <witold@wasiczko.pl>
  */
-class PhpDebugBarMiddleware implements MiddlewareInterface
+final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
     protected $debugBarRenderer;
 
@@ -49,6 +49,26 @@ class PhpDebugBarMiddleware implements MiddlewareInterface
             return $this->attachDebugBarToResponse($response);
         }
         return $this->prepareHtmlResponseWithDebugBar($response);
+    }
+
+    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next): ResponseInterface
+    {
+        $handler = new class($next, $response) implements RequestHandlerInterface {
+            private $next;
+            private $response;
+
+            public function __construct(callable $next, ResponseInterface $response)
+            {
+                $this->next = $next;
+                $this->response = $response;
+            }
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                return ($this->next)($request, $this->response);
+            }
+        };
+        return $this->process($request, $handler);
     }
 
     /**

@@ -1,4 +1,5 @@
 <?php
+declare (strict_types=1);
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
@@ -26,7 +27,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->middleware = new PhpDebugBarMiddleware($this->debugbarRenderer);
     }
 
-    public function testNotAttachIfNotAccept()
+    public function testTwoPassCallingForCompatibility(): void
     {
         $request = new ServerRequest();
         $response = new Response();
@@ -42,92 +43,89 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->assertSame($response, $result);
     }
 
-    public function testAttachToNoneHtmlResponse()
+    public function testNotAttachIfNotAccept(): void
+    {
+        $request = new ServerRequest();
+        $response = new Response();
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+    }
+
+    public function testAttachToNoneHtmlResponse(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
         $response = new Response();
         $response->getBody()->write('ResponseBody');
-        $calledOut = false;
-        $outFunction = function ($request, $response) use (&$calledOut) {
-            $calledOut = true;
-            return $response;
-        };
+
+        $requestHandler = new RequestHandlerStub($response);
 
         $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
         $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
 
-        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+        $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertTrue($calledOut, 'Out is not called');
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertNotSame($response, $result);
         $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
-    public function testAttachToHtmlResponse()
+    public function testAttachToHtmlResponse(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
         $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
         $response->getBody()->write('ResponseBody');
-        $calledOut = false;
-        $outFunction = function ($request, $response) use (&$calledOut) {
-            $calledOut = true;
-            return $response;
-        };
+        $requestHandler = new RequestHandlerStub($response);
 
         $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
         $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
 
-        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+        $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertTrue($calledOut, 'Out is not called');
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertSame($response, $result);
         $this->assertSame("ResponseBodyRenderHeadRenderBody", (string) $result->getBody());
     }
 
-    public function testAppendsToEndOfHtmlResponse()
+    public function testAppendsToEndOfHtmlResponse(): void
     {
         $html = '<html><head><title>Foo</title></head><body>Content</body>';
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
         $response = new Response\HtmlResponse($html);
-        $calledOut = false;
-        $outFunction = function ($request, $response) use (&$calledOut) {
-            $calledOut = true;
-            return $response;
-        };
+        $requestHandler = new RequestHandlerStub($response);
 
         $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
         $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
 
-        $result = call_user_func($this->middleware, $request, $response, $outFunction);
+        $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertTrue($calledOut, 'Out is not called');
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertSame($response, $result);
         $this->assertSame($html . 'RenderHeadRenderBody', (string) $result->getBody());
     }
 
-    public function testTryToHandleNotExistingStaticFile()
+    public function testTryToHandleNotExistingStaticFile(): void
     {
         $this->debugbarRenderer->expects($this->any())->method('getBaseUrl')->willReturn('/phpdebugbar');
 
         $uri = new Uri('http://example.com/phpdebugbar/boo.css');
         $request = new ServerRequest([], [], $uri, null, 'php://memory');
         $response = new Response\HtmlResponse('<html></html>');
+        $requestHandler = new RequestHandlerStub($response);
 
-        $calledOut = false;
-        $outFunction = function ($request, $response) use (&$calledOut) {
-            $calledOut = true;
-            return $response;
-        };
+        $result = $this->middleware->process($request, $requestHandler);
 
-        $result = call_user_func($this->middleware, $request, $response, $outFunction);
-        $this->assertTrue($calledOut, 'Out is not called');
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertSame($response, $result);
     }
 
     /**
      * @dataProvider getContentTypes
      */
-    public function testHandleStaticFile($extension, $contentType)
+    public function testHandleStaticFile(string $extension, string $contentType): void
     {
         $root = vfsStream::setup('boo');
 
@@ -140,20 +138,17 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         vfsStream::newFile(sprintf('debugbar.%s', $extension))->withContent('filecontent')->at($root);
 
-        $calledOut = false;
-        $outFunction = function ($request, $response) use (&$calledOut) {
-            $calledOut = true;
-            return $response;
-        };
+        $requestHandler = new RequestHandlerStub($response);
 
-        $result = call_user_func($this->middleware, $request, $response, $outFunction);
-        $this->assertFalse($calledOut, 'Out is called');
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertFalse($requestHandler->isCalled(), 'Request handler is called');
         $this->assertNotSame($response, $result);
         $this->assertSame($contentType, $result->getHeaderLine('Content-type'));
         $this->assertSame('filecontent', (string) $result->getBody());
     }
 
-    public function getContentTypes()
+    public function getContentTypes(): array
     {
         return [
             ['css', 'text/css'],

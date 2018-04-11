@@ -1,23 +1,24 @@
 <?php
+declare (strict_types=1);
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
 use BadMethodCallException;
 use Psr\Http\Message\ResponseInterface;
-use Zend\Diactoros\Response\EmitterInterface;
+use Zend\HttpHandlerRunner\Emitter\EmitterInterface;
 
 final class TestEmitter implements EmitterInterface
 {
     private $response;
 
-    public function emit(ResponseInterface $response)
+    public function emit(ResponseInterface $response): bool
     {
         $this->response = $response;
 
-        return $response;
+        return true;
     }
 
-    public function getResponse()
+    public function getResponse(): ResponseInterface
     {
         if ($this->response instanceof ResponseInterface) {
             return $this->response;

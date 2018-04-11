@@ -1,16 +1,17 @@
 <?php
+declare (strict_types=1);
 
 namespace PhpMiddleware\PhpDebugBar;
 
 final class ConfigProvider
 {
-    public static function getConfig()
+    public static function getConfig(): array
     {
         $self = new self();
         return $self();
     }
 
-    public function __invoke()
+    public function __invoke(): array
     {
         $config = include __DIR__ . '/../config/phpdebugbar.config.php';
         $config['dependencies'] = include __DIR__ . '/../config/dependency.config.php';
