@@ -1,22 +1,25 @@
 <?php
+declare (strict_types=1);
 
 namespace PhpMiddlewareTest\PhpDebugBar;
 
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Zend\Diactoros\Response;
 
 abstract class AbstractMiddlewareRunnerTest extends TestCase
 {
 
-    final public function testAppendJsIntoHtmlContent()
+    final public function testAppendJsIntoHtmlContent(): void
     {
         $response = $this->dispatchApplication([
             'REQUEST_URI' => '/hello',
             'REQUEST_METHOD' => 'GET',
             'HTTP_ACCEPT' => 'text/html',
         ], [
-            '/hello' => function (ServerRequestInterface $request, ResponseInterface $response, $next) {
+            '/hello' => function (ServerRequestInterface $request) {
+                $response = new Response();
                 $response->getBody()->write('Hello!');
                 return $response;
             },
@@ -29,7 +32,7 @@ abstract class AbstractMiddlewareRunnerTest extends TestCase
         $this->assertContains('"/phpdebugbar/debugbar.js"', $responseBody);
     }
 
-    final public function testGetStatics()
+    final public function testGetStatics(): void
     {
         $response = $this->dispatchApplication([
             'DOCUMENT_ROOT' => __DIR__,
@@ -53,8 +56,5 @@ abstract class AbstractMiddlewareRunnerTest extends TestCase
         $this->assertContains('text/javascript', $contentType);
     }
 
-    /**
-     * @return ResponseInterface
-     */
-    abstract protected function dispatchApplication(array $server, array $pipe = []);
+    abstract protected function dispatchApplication(array $server, array $pipe = []): ResponseInterface;
 }

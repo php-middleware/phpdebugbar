@@ -1,4 +1,5 @@
 <?php
+declare (strict_types=1);
 
 namespace PhpMiddleware\PhpDebugBar;
 
@@ -7,7 +8,7 @@ use Psr\Container\ContainerInterface;
 
 final class StandardDebugBarFactory
 {
-    public function __invoke(ContainerInterface $container = null)
+    public function __invoke(ContainerInterface $container = null): StandardDebugBar
     {
         $debugBar = new StandardDebugBar();
 

@@ -1,9 +1,12 @@
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+
 language: php
 
 php:
-  - 5.6
-  - 7.0
   - 7.1
+  - 7.2
 
 env:
   - DEPS=lowest
@@ -11,7 +14,6 @@ env:
 
 before_script:
   - phpenv config-rm xdebug.ini
-  - composer self-update
   - if [[ $DEPS == 'lowest' ]]; then composer update --prefer-stable --no-interaction --prefer-lowest ; fi
   - if [[ $DEPS == 'latest' ]]; then composer update --prefer-stable --no-interaction ; fi
 
