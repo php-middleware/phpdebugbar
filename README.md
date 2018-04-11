@@ -1,5 +1,5 @@
 # phpdebugbar middleware [![Build Status](https://travis-ci.org/php-middleware/phpdebugbar.svg?branch=master)](https://travis-ci.org/php-middleware/phpdebugbar)
-PHP Debug bar [PSR-15](https://www.php-fig.org/psr/psr-15/) middleware with [PSR-7](https://www.php-fig.org/psr/psr-7/). Also supports [PSR-11]([PSR-7](https://www.php-fig.org/psr/psr-11/))
+PHP Debug bar [PSR-15](https://www.php-fig.org/psr/psr-15/) middleware with [PSR-7](https://www.php-fig.org/psr/psr-7/). Also supports [PSR-11](https://www.php-fig.org/psr/psr-11/)
 
 This middleware provide framework-agnostic possibility to attach [PHP Debug Bar](http://phpdebugbar.com/) to your response (html on non-html!).
 
@@ -30,7 +30,13 @@ You don't need to copy any static assets from phpdebugbar vendor!
 
 ### How to install on Zend Expressive?
 
-[Follow Zend Expressive documentation](https://docs.zendframework.com/zend-expressive/v3/features/modular-applications/).
+You need to register ConfigProvider and pipe provided middleware:
+
+```php
+$app->pipe(PhpDebugBarMiddleware::class);
+```
+
+For more follow Zend Expressive [documentation](https://docs.zendframework.com/zend-expressive/v3/features/modular-applications/).
 
 ### How to install on Slim 3?
 
