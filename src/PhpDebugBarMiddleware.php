@@ -43,7 +43,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request);
 
-        $forceHeaderValue = $request->getHeaderLine('X-Debug-Bar');
+        $forceHeaderValue = $request->getHeaderLine(self::FORCE_HEADER);
         $isForceEnable = $forceHeaderValue === 'true';
         $isForceDisable = $forceHeaderValue === 'false';
 
