@@ -26,6 +26,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     const FORCE_KEY = 'X-Debug-Bar';
     const FORCE_HEADER = self::FORCE_KEY;
     const FORCE_COOKIE = self::FORCE_KEY;
+    const FORCE_ATTRIBUTE = self::FORCE_KEY;
 
     protected $debugBarRenderer;
 
@@ -47,8 +48,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $forceHeaderValue = $request->getHeaderLine(self::FORCE_HEADER);
         $forceCookieValue = $request->getCookieParams()[self::FORCE_COOKIE] ?? '';
-        $isForceEnable = $forceHeaderValue === 'true' || $forceCookieValue === 'true';
-        $isForceDisable = $forceHeaderValue === 'false' || $forceCookieValue === 'false';
+        $forceAttibuteValue = $request->getAttribute(self::FORCE_ATTRIBUTE, '');
+        $isForceEnable = $forceHeaderValue === 'true' || $forceCookieValue === 'true' || $forceAttibuteValue === 'true';
+        $isForceDisable = $forceHeaderValue === 'false' || $forceCookieValue === 'false' || $forceAttibuteValue === 'false';
 
         if ($isForceDisable || (!$isForceEnable && !$this->isHtmlAccepted($request))) {
             return $response;

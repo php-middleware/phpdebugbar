@@ -34,8 +34,8 @@ Sometimes you want to have control when show or not PHP Debug Bar:
 * custom content negotiation,
 * allow to make redirects.
 
-We allow you to disable attaching phpdebugbar using `X-Debug-Bar: false` header or cookie.
-To force enable just send request with `X-Debug-Bar` header or cookie with `true` value.
+We allow you to disable attaching phpdebugbar using `X-Debug-Bar: false` header, cookie or request attribute.
+To force enable just send request with `X-Debug-Bar` header, cookie or request attribute with `true` value.
 
 ### How to install on Zend Expressive?
 
