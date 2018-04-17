@@ -23,6 +23,8 @@ use Zend\Diactoros\Stream;
  */
 final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
+    const FORCE_HEADER = 'X-Debug-Bar';
+
     protected $debugBarRenderer;
 
     public function __construct(DebugBarRenderer $debugbarRenderer)
@@ -41,7 +43,11 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request);
 
-        if (!$this->isHtmlAccepted($request)) {
+        $forceHeaderValue = $request->getHeaderLine('X-Debug-Bar');
+        $isForceEnable = $forceHeaderValue === 'true';
+        $isForceDisable = $forceHeaderValue === 'false';
+
+        if ($isForceDisable || (!$isForceEnable && !$this->isHtmlAccepted($request))) {
             return $response;
         }
 
