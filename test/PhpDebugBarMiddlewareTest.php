@@ -74,6 +74,19 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
+    public function testForceAttachDebugbarIfCookiePresents(): void
+    {
+        $cookies = ['X-Debug-Bar' => 'true'];
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json'], $cookies);
+        $response = new Response();
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
     public function testAttachToNoneHtmlResponse(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
@@ -106,6 +119,21 @@ class PhpDebugBarMiddlewareTest extends TestCase
     public function testForceNotAttachDebugbarIfHeaderPresents(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Debug-Bar' => 'false']);
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame("ResponseBody", (string) $result->getBody());
+    }
+
+    public function testForceNotAttachDebugbarIfCookiePresents(): void
+    {
+        $cookie = ['X-Debug-Bar' => 'false'];
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html'], $cookie);
         $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
         $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);
