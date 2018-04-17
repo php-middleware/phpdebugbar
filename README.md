@@ -28,6 +28,15 @@ $app->run($request, $response);
 
 You don't need to copy any static assets from phpdebugbar vendor!
 
+### How to force disable or enable PHP Debug Bar?
+
+Sometimes you want to have control when show or not PHP Debug Bar:
+* custom content negotiation,
+* allow to make redirects.
+
+We allow you to disable attaching phpdebugbar using `X-Debug-Bar: false` header or cookie.
+To force enable just send request with `X-Debug-Bar` header or cookie with `true` value.
+
 ### How to install on Zend Expressive?
 
 You need to register ConfigProvider and pipe provided middleware:
