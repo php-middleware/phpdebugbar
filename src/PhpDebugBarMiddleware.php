@@ -40,6 +40,10 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         }
 
         $response = $handler->handle($request);
+        
+        if ($response->getStatusCode() === 302) {
+            return $response;
+        }
 
         if (!$this->isHtmlAccepted($request)) {
             return $response;
