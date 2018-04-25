@@ -64,7 +64,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
     public function testForceAttachDebugbarIfHeaderPresents(): void
     {
-        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json', 'X-Debug-Bar' => 'true']);
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json', 'X-Enable-Debug-Bar' => 'true']);
         $response = new Response();
         $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);
@@ -76,7 +76,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
     public function testForceAttachDebugbarIfCookiePresents(): void
     {
-        $cookies = ['X-Debug-Bar' => 'true'];
+        $cookies = ['X-Enable-Debug-Bar' => 'true'];
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json'], $cookies);
         $response = new Response();
         $response->getBody()->write('ResponseBody');
@@ -90,7 +90,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
     public function testForceAttachDebugbarIfAttributePresents(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json']);
-        $request = $request->withAttribute('X-Debug-Bar', 'true');
+        $request = $request->withAttribute('X-Enable-Debug-Bar', 'true');
         $response = new Response();
         $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);
@@ -131,7 +131,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
     public function testForceNotAttachDebugbarIfHeaderPresents(): void
     {
-        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Debug-Bar' => 'false']);
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Enable-Debug-Bar' => 'false']);
         $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
         $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);
@@ -145,7 +145,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
     public function testForceNotAttachDebugbarIfCookiePresents(): void
     {
-        $cookie = ['X-Debug-Bar' => 'false'];
+        $cookie = ['X-Enable-Debug-Bar' => 'false'];
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html'], $cookie);
         $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
         $response->getBody()->write('ResponseBody');
@@ -161,7 +161,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
     public function testForceNotAttachDebugbarIfAttributePresents(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
-        $request = $request->withAttribute('X-Debug-Bar', 'false');
+        $request = $request->withAttribute('X-Enable-Debug-Bar', 'false');
         $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
         $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);

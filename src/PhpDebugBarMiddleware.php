@@ -23,10 +23,7 @@ use Zend\Diactoros\Stream;
  */
 final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
-    const FORCE_KEY = 'X-Debug-Bar';
-    const FORCE_HEADER = self::FORCE_KEY;
-    const FORCE_COOKIE = self::FORCE_KEY;
-    const FORCE_ATTRIBUTE = self::FORCE_KEY;
+    public const FORCE_KEY = 'X-Enable-Debug-Bar';
 
     protected $debugBarRenderer;
 
@@ -46,9 +43,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request);
 
-        $forceHeaderValue = $request->getHeaderLine(self::FORCE_HEADER);
-        $forceCookieValue = $request->getCookieParams()[self::FORCE_COOKIE] ?? '';
-        $forceAttibuteValue = $request->getAttribute(self::FORCE_ATTRIBUTE, '');
+        $forceHeaderValue = $request->getHeaderLine(self::FORCE_KEY);
+        $forceCookieValue = $request->getCookieParams()[self::FORCE_KEY] ?? '';
+        $forceAttibuteValue = $request->getAttribute(self::FORCE_KEY, '');
         $isForceEnable = in_array('true', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
         $isForceDisable = in_array('false', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
 
