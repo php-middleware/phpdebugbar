@@ -12,8 +12,7 @@ final class JavascriptRendererFactory
     public function __invoke(ContainerInterface $container = null): JavascriptRenderer
     {
         if ($container === null || !$container->has(DebugBar::class)) {
-            $standardDebugBarFactory = new StandardDebugBarFactory();
-            $debugbar = $standardDebugBarFactory($container);
+            $debugbar = (new StandardDebugBarFactory())($container);
         } else {
             $debugbar = $container->get(DebugBar::class);
         }

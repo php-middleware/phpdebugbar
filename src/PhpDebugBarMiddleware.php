@@ -6,10 +6,10 @@ namespace PhpMiddleware\PhpDebugBar;
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ServerRequestInterface as ServerRequest;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
-use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Http\Uri as SlimUri;
 use Zend\Diactoros\Response as DiactorosResponse;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -35,7 +35,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     /**
      * @inheritDoc
      */
-    public function process(Request $request, RequestHandlerInterface $handler): Response
+    public function process(ServerRequest $request, RequestHandler $handler): Response
     {
         if ($staticFile = $this->getStaticFile($request->getUri())) {
             return $staticFile;
@@ -59,9 +59,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $this->prepareHtmlResponseWithDebugBar($response);
     }
 
-    public function __invoke(Request $request, Response $response, callable $next): Response
+    public function __invoke(ServerRequest $request, Response $response, callable $next): Response
     {
-        $handler = new class($next, $response) implements RequestHandlerInterface {
+        $handler = new class($next, $response) implements RequestHandler {
             private $next;
             private $response;
 
@@ -71,7 +71,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
                 $this->response = $response;
             }
 
-            public function handle(Request $request): Response
+            public function handle(ServerRequest $request): Response
             {
                 return ($this->next)($request, $this->response);
             }
@@ -164,7 +164,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $this->hasHeaderContains($response, 'Content-Type', 'text/html');
     }
 
-    private function isHtmlAccepted(Request $request): bool
+    private function isHtmlAccepted(ServerRequest $request): bool
     {
         return $this->hasHeaderContains($request, 'Accept', 'text/html');
     }
