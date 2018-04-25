@@ -115,6 +115,47 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
+    public function testNotAttachToRedirectResponse(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = (new Response())->withStatus(302)->withAddedHeader('Location', 'some-location');
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+    }
+
+    public function testAttachToRedirectResponseWithoutLocation(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = (new Response())->withStatus(302);
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertNotSame($response, $result);
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 302 Found\r\n\r\n</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
+    public function testForceAttachToRedirectResponse(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Enable-Debug-Bar' => 'true']);
+        $response = (new Response())->withStatus(302)->withAddedHeader('Location', 'some-location');
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertNotSame($response, $result);
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 302 Found\r\nLocation: some-location\r\n\r\n</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
     public function testAttachToHtmlResponse(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);

@@ -5,13 +5,13 @@ namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
 use Psr\Http\Message\MessageInterface;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Slim\Http\Uri;
-use Zend\Diactoros\Response;
+use Slim\Http\Uri as SlimUri;
+use Zend\Diactoros\Response as DiactorosResponse;
 use Zend\Diactoros\Response\HtmlResponse;
 use Zend\Diactoros\Response\Serializer;
 use Zend\Diactoros\Stream;
@@ -35,7 +35,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     /**
      * @inheritDoc
      */
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
+    public function process(Request $request, RequestHandlerInterface $handler): Response
     {
         if ($staticFile = $this->getStaticFile($request->getUri())) {
             return $staticFile;
@@ -49,7 +49,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         $isForceEnable = in_array('true', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
         $isForceDisable = in_array('false', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
 
-        if ($isForceDisable || (!$isForceEnable && !$this->isHtmlAccepted($request))) {
+        if ($isForceDisable || (!$isForceEnable && ($this->isRedirect($response) || !$this->isHtmlAccepted($request)))) {
             return $response;
         }
 
@@ -59,19 +59,19 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $this->prepareHtmlResponseWithDebugBar($response);
     }
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next): ResponseInterface
+    public function __invoke(Request $request, Response $response, callable $next): Response
     {
         $handler = new class($next, $response) implements RequestHandlerInterface {
             private $next;
             private $response;
 
-            public function __construct(callable $next, ResponseInterface $response)
+            public function __construct(callable $next, Response $response)
             {
                 $this->next = $next;
                 $this->response = $response;
             }
 
-            public function handle(ServerRequestInterface $request): ResponseInterface
+            public function handle(Request $request): Response
             {
                 return ($this->next)($request, $this->response);
             }
@@ -79,10 +79,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $this->process($request, $handler);
     }
 
-    /**
-     * @return HtmlResponse
-     */
-    private function prepareHtmlResponseWithDebugBar(ResponseInterface $response)
+    private function prepareHtmlResponseWithDebugBar(Response $response): HtmlResponse
     {
         $head = $this->debugBarRenderer->renderHead();
         $body = $this->debugBarRenderer->render();
@@ -94,10 +91,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return new HtmlResponse($result);
     }
 
-    /**
-     * @return ResponseInterface
-     */
-    private function attachDebugBarToResponse(ResponseInterface $response)
+    private function attachDebugBarToResponse(Response $response): Response
     {
         $head = $this->debugBarRenderer->renderHead();
         $body = $this->debugBarRenderer->render();
@@ -111,15 +105,12 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $response;
     }
 
-    /**
-     * @return ResponseInterface|null
-     */
-    private function getStaticFile(UriInterface $uri)
+    private function getStaticFile(UriInterface $uri): ?Response
     {
         $path = $this->extractPath($uri);
 
         if (strpos($path, $this->debugBarRenderer->getBaseUrl()) !== 0) {
-            return;
+            return null;
         }
 
         $pathToFile = substr($path, strlen($this->debugBarRenderer->getBaseUrl()));
@@ -127,26 +118,21 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         $fullPathToFile = $this->debugBarRenderer->getBasePath() . $pathToFile;
 
         if (!file_exists($fullPathToFile)) {
-            return;
+            return null;
         }
 
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
         $stream = new Stream($fullPathToFile, 'r');
 
-        return new Response($stream, 200, [
+        return new DiactorosResponse($stream, 200, [
             'Content-type' => $contentType,
         ]);
     }
 
-    /**
-     * @param UriInterface $uri
-     *
-     * @return string
-     */
-    private function extractPath(UriInterface $uri)
+    private function extractPath(UriInterface $uri): string
     {
         // Slim3 compatibility
-        if ($uri instanceof Uri) {
+        if ($uri instanceof SlimUri) {
             $basePath = $uri->getBasePath();
             if (!empty($basePath)) {
                 return $basePath;
@@ -155,12 +141,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $uri->getPath();
     }
 
-    /**
-     * @param string $filename
-     *
-     * @return string
-     */
-    private function getContentTypeByFileName($filename)
+    private function getContentTypeByFileName(string $filename): string
     {
         $ext = pathinfo($filename, PATHINFO_EXTENSION);
 
@@ -178,35 +159,25 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return isset($map[$ext]) ? $map[$ext] : 'text/plain';
     }
 
-    /**
-     * @param ResponseInterface $response
-     *
-     * @return bool
-     */
-    private function isHtmlResponse(ResponseInterface $response)
+    private function isHtmlResponse(Response $response): bool
     {
         return $this->hasHeaderContains($response, 'Content-Type', 'text/html');
     }
 
-    /**
-     * @param ServerRequestInterface $request
-     *
-     * @return bool
-     */
-    private function isHtmlAccepted(ServerRequestInterface $request)
+    private function isHtmlAccepted(Request $request): bool
     {
         return $this->hasHeaderContains($request, 'Accept', 'text/html');
     }
 
-    /**
-     * @param MessageInterface $message
-     * @param string $headerName
-     * @param string $value
-     *
-     * @return bool
-     */
-    private function hasHeaderContains(MessageInterface $message, $headerName, $value)
+    private function hasHeaderContains(MessageInterface $message, string $headerName, string $value): bool
     {
         return strpos($message->getHeaderLine($headerName), $value) !== false;
+    }
+
+    private function isRedirect(Response $response): bool
+    {
+        $statusCode = $response->getStatusCode();
+
+        return ($statusCode >= 300 || $statusCode < 400) && $response->getHeaderLine('Location') !== '';
     }
 }
