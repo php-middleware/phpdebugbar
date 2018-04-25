@@ -71,7 +71,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertSame('<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>', (string) $result->getBody());
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testForceAttachDebugbarIfCookiePresents(): void
@@ -84,7 +84,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertSame('<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>', (string) $result->getBody());
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testForceAttachDebugbarIfAttributePresents(): void
@@ -97,7 +97,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertSame('<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>', (string) $result->getBody());
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testAttachToNoneHtmlResponse(): void
@@ -112,7 +112,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertNotSame($response, $result);
-        $this->assertSame('<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>', (string) $result->getBody());
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testAttachToHtmlResponse(): void
