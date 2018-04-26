@@ -25,11 +25,24 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
     public const FORCE_KEY = 'X-Enable-Debug-Bar';
 
+    /**
+     * @var DebugBarRenderer
+     */
     protected $debugBarRenderer;
 
-    public function __construct(DebugBarRenderer $debugbarRenderer)
+    /**
+     * @var bool
+     */
+    protected $excludeNonHtmlContent;
+
+    /**
+     * @param DebugBarRenderer $debugbarRenderer
+     * @param bool $excludeNonHtmlContent Whether to disable debugbar on content-types != 'test/html'
+     */
+    public function __construct(DebugBarRenderer $debugbarRenderer, $excludeNonHtmlContent=false)
     {
         $this->debugBarRenderer = $debugbarRenderer;
+        $this->excludeNonHtmlContent = $excludeNonHtmlContent;
     }
 
     /**
@@ -55,7 +68,10 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         if ($this->isHtmlResponse($response)) {
             return $this->attachDebugBarToResponse($response);
+        } elseif ($this->excludeNonHtmlContent) {
+            return $response;
         }
+
         return $this->prepareHtmlResponseWithDebugBar($response);
     }
 
