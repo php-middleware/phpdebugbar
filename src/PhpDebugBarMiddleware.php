@@ -42,6 +42,10 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         }
 
         $response = $handler->handle($request);
+        
+        if ($response->getStatusCode() === 302) {
+            return $response;
+        }
 
         $forceHeaderValue = $request->getHeaderLine(self::FORCE_KEY);
         $forceCookieValue = $request->getCookieParams()[self::FORCE_KEY] ?? '';
