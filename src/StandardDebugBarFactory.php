@@ -15,7 +15,7 @@ final class StandardDebugBarFactory
         if ($container !== null) {
             $config = $container->has('config') ? $container->get('config') : [];
 
-            $collectors = isset($config['phpmiddleware']['phpdebugbar']['collectors']) ? $config['phpmiddleware']['phpdebugbar']['collectors'] : [];
+            $collectors = $config['phpmiddleware']['phpdebugbar']['collectors'] ?: [];
 
             foreach ($collectors as $collectorName) {
                 $collector = $container->get($collectorName);

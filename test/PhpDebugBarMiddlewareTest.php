@@ -24,6 +24,9 @@ class PhpDebugBarMiddlewareTest extends TestCase
     protected function setUp()
     {
         $this->debugbarRenderer = $this->getMockBuilder(JavascriptRenderer::class)->disableOriginalConstructor()->getMock();
+        $this->debugbarRenderer->method('renderHead')->willReturn('RenderHead');
+        $this->debugbarRenderer->method('render')->willReturn('RenderBody');
+
         $this->middleware = new PhpDebugBarMiddleware($this->debugbarRenderer);
     }
 
@@ -31,6 +34,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
     {
         $request = new ServerRequest();
         $response = new Response();
+        $response->getBody()->write('ResponseBody');
         $calledOut = false;
         $outFunction = function ($request, $response) use (&$calledOut) {
             $calledOut = true;
@@ -40,6 +44,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $result = call_user_func($this->middleware, $request, $response, $outFunction);
 
         $this->assertTrue($calledOut, 'Out is not called');
+        $this->assertSame('ResponseBody', (string) $result->getBody());
         $this->assertSame($response, $result);
     }
 
@@ -47,12 +52,52 @@ class PhpDebugBarMiddlewareTest extends TestCase
     {
         $request = new ServerRequest();
         $response = new Response();
+        $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);
 
         $result = $this->middleware->process($request, $requestHandler);
 
         $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame('ResponseBody', (string) $result->getBody());
         $this->assertSame($response, $result);
+    }
+
+    public function testForceAttachDebugbarIfHeaderPresents(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json', 'X-Enable-Debug-Bar' => 'true']);
+        $response = new Response();
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
+    public function testForceAttachDebugbarIfCookiePresents(): void
+    {
+        $cookies = ['X-Enable-Debug-Bar' => 'true'];
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json'], $cookies);
+        $response = new Response();
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
+    public function testForceAttachDebugbarIfAttributePresents(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'application/json']);
+        $request = $request->withAttribute('X-Enable-Debug-Bar', 'true');
+        $response = new Response();
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testAttachToNoneHtmlResponse(): void
@@ -63,14 +108,52 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $requestHandler = new RequestHandlerStub($response);
 
-        $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
-        $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
-
         $result = $this->middleware->process($request, $requestHandler);
 
         $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertNotSame($response, $result);
         $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
+    public function testNotAttachToRedirectResponse(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = (new Response())->withStatus(302)->withAddedHeader('Location', 'some-location');
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+    }
+
+    public function testAttachToRedirectResponseWithoutLocation(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = (new Response())->withStatus(302);
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertNotSame($response, $result);
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 302 Found\r\n\r\n</pre>RenderBody</body></html>", (string) $result->getBody());
+    }
+
+    public function testForceAttachToRedirectResponse(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Enable-Debug-Bar' => 'true']);
+        $response = (new Response())->withStatus(302)->withAddedHeader('Location', 'some-location');
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertNotSame($response, $result);
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 302 Found\r\nLocation: some-location\r\n\r\n</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testAttachToHtmlResponse(): void
@@ -80,14 +163,55 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $response->getBody()->write('ResponseBody');
         $requestHandler = new RequestHandlerStub($response);
 
-        $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
-        $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame('ResponseBodyRenderHeadRenderBody', (string) $result->getBody());
+    }
+
+    public function testForceNotAttachDebugbarIfHeaderPresents(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Enable-Debug-Bar' => 'false']);
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
 
         $result = $this->middleware->process($request, $requestHandler);
 
         $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertSame($response, $result);
-        $this->assertSame("ResponseBodyRenderHeadRenderBody", (string) $result->getBody());
+        $this->assertSame('ResponseBody', (string) $result->getBody());
+    }
+
+    public function testForceNotAttachDebugbarIfCookiePresents(): void
+    {
+        $cookie = ['X-Enable-Debug-Bar' => 'false'];
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html'], $cookie);
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame('ResponseBody', (string) $result->getBody());
+    }
+
+    public function testForceNotAttachDebugbarIfAttributePresents(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $request = $request->withAttribute('X-Enable-Debug-Bar', 'false');
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame('ResponseBody', (string) $result->getBody());
     }
 
     public function testAppendsToEndOfHtmlResponse(): void
@@ -96,9 +220,6 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
         $response = new Response\HtmlResponse($html);
         $requestHandler = new RequestHandlerStub($response);
-
-        $this->debugbarRenderer->expects($this->once())->method('renderHead')->willReturn('RenderHead');
-        $this->debugbarRenderer->expects($this->once())->method('render')->willReturn('RenderBody');
 
         $result = $this->middleware->process($request, $requestHandler);
 

@@ -11,8 +11,7 @@ final class PhpDebugBarMiddlewareFactory
     public function __invoke(ContainerInterface $container = null): PhpDebugBarMiddleware
     {
         if ($container === null || !$container->has(JavascriptRenderer::class)) {
-            $rendererFactory = new JavascriptRendererFactory();
-            $renderer = $rendererFactory($container);
+            $renderer = (new JavascriptRendererFactory())($container);
         } else {
             $renderer = $container->get(JavascriptRenderer::class);
         }
