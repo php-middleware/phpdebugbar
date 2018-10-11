@@ -1,7 +1,7 @@
 # phpdebugbar middleware [![Build Status](https://travis-ci.org/php-middleware/phpdebugbar.svg?branch=master)](https://travis-ci.org/php-middleware/phpdebugbar)
-[PHP Debug Bar](http://phpdebugbar.com/) as framework-agnostic diag [PSR-15 middleware](https://www.php-fig.org/psr/psr-15/) with [PSR-7 messages](https://www.php-fig.org/psr/psr-7/) created by [PSR-17 message factories](https://www.php-fig.org/psr/psr-17/). Also provides [PSR-11 container invokable factories](https://www.php-fig.org/psr/psr-11/)
+[PHP Debug Bar](http://phpdebugbar.com/) as framework-agnostic [PSR-15 middleware](https://www.php-fig.org/psr/psr-15/) with [PSR-7 messages](https://www.php-fig.org/psr/psr-7/) created by [PSR-17 message factories](https://www.php-fig.org/psr/psr-17/). Also provides [PSR-11 container invokable factories](https://www.php-fig.org/psr/psr-11/).
 
-This middleware provide framework-agnostic possibility to attach [PHP Debug Bar](http://phpdebugbar.com/) to your response (html on non-html!).
+Framework-agnostic way to attach [PHP Debug Bar](http://phpdebugbar.com/) to your response (html or non-html!).
 
 ## Installation
 
@@ -9,7 +9,7 @@ This middleware provide framework-agnostic possibility to attach [PHP Debug Bar]
 composer require --dev php-middleware/php-debug-bar
 ```
 
-To build this middleware you need to injecting inside `PhpDebugBarMiddleware` instance `DebugBar\JavascriptRenderer` (you can get it from `DebugBar\StandardDebugBar`) and add middleware to your middleware runner:
+To build middleware you need to inject `DebugBar\JavascriptRenderer` (you can get it from `DebugBar\StandardDebugBar`) inside `PhpDebugBarMiddleware` and add it into your middleware runner:
 
 ```php
 $debugbar = new DebugBar\StandardDebugBar();
@@ -29,7 +29,7 @@ You don't need to copy any static assets from phpdebugbar vendor!
 
 ### How to force disable or enable PHP Debug Bar?
 
-Sometimes you want to have control when enable (or not) PHP Debug Bar:
+Sometimes you want to have control when enable or disable PHP Debug Bar:
 * custom content negotiation,
 * allow to debug redirects responses.
 
@@ -38,11 +38,11 @@ To force enable just send request with `X-Enable-Debug-Bar` header, cookie or re
 
 ### PSR-17
 
-This package is not connected with any PSR-7 implementation - you need to provide it by own. Middleware require ResponseFactory and StreamFactory interfaces. [List of existing interfaces](https://packagist.org/providers/psr/http-factory-implementation).
+This package isn't require any PSR-7 implementation - you need to provide it by own. Middleware require ResponseFactory and StreamFactory interfaces. [List of existing interfaces](https://packagist.org/providers/psr/http-factory-implementation).
 
 #### ... and PSR-11
 
-If you use provided PSR-11 factories, then you container must have services registered as PSR-17 interface's name. Example for [zend-diactoros](https://github.com/zendframework/zend-diactoros) implementation:
+If you use provided PSR-11 factories, then you container must have services registered as PSR-17 interface's name. Example for [zend-diactoros](https://github.com/zendframework/zend-diactoros) implementation and [Pimple](https://pimple.symfony.com/):
 
 ```php
 $container[Psr\Http\Message\ResponseInterface::class] = new Zend\Diactoros\ResponseFactory();
@@ -51,13 +51,13 @@ $container[Psr\Http\Message\StreamFactoryInterface] = new Zend\Diactoros\StreamF
 
 ### How to install on Zend Expressive?
 
-You need to register `PhpMiddleware\PhpDebugBar\ConfigProvider` and pipe provided middleware:e.g.
+You need to register `PhpMiddleware\PhpDebugBar\ConfigProvider` and pipe provided middleware:
 
 ```php
 $app->pipe(\PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware::class);
 ```
 
-For more follow Zend Expressive [documentation](https://docs.zendframework.com/zend-expressive/v3/features/modular-applications/).
+For more - follow Zend Expressive [documentation](https://docs.zendframework.com/zend-expressive/v3/features/modular-applications/).
 
 ### How to install on Slim 3?
 
@@ -72,7 +72,9 @@ foreach (ConfigProvider::getConfig()['dependencies']['factories'] as $key => $fa
 and add middleware from container to app:
 
 ```php
-$app->add($app->getContainer()->get(\PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware::class));
+$app->add(
+    $app->getContainer()->get(\PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware::class)
+);
 ```
 
 ### How to configure using existing factories?
