@@ -5,31 +5,34 @@ namespace PhpMiddleware\PhpDebugBar;
 
 use DebugBar\JavascriptRenderer as DebugBarRenderer;
 use Psr\Http\Message\MessageInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as ServerRequest;
+use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\Http\Uri as SlimUri;
-use Zend\Diactoros\Response as DiactorosResponse;
-use Zend\Diactoros\Response\HtmlResponse;
-use Zend\Diactoros\Response\Serializer;
-use Zend\Diactoros\Stream;
 
 /**
- * PhpDebugBarMiddleware
- *
  * @author Witold Wasiczko <witold@wasiczko.pl>
  */
 final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
     public const FORCE_KEY = 'X-Enable-Debug-Bar';
 
-    protected $debugBarRenderer;
+    private $debugBarRenderer;
+    private $responseFactory;
+    private $streamFactory;
 
-    public function __construct(DebugBarRenderer $debugbarRenderer)
-    {
+    public function __construct(
+        DebugBarRenderer $debugbarRenderer,
+        ResponseFactoryInterface $responseFactory,
+        StreamFactoryInterface $streamFactory
+    ) {
         $this->debugBarRenderer = $debugbarRenderer;
+        $this->responseFactory = $responseFactory;
+        $this->streamFactory = $streamFactory;
     }
 
     /**
@@ -79,16 +82,20 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $this->process($request, $handler);
     }
 
-    private function prepareHtmlResponseWithDebugBar(Response $response): HtmlResponse
+    private function prepareHtmlResponseWithDebugBar(Response $response): Response
     {
         $head = $this->debugBarRenderer->renderHead();
         $body = $this->debugBarRenderer->render();
-        $outResponseBody = Serializer::toString($response);
+        $outResponseBody = $this->serializeResponse($response);
         $template = '<html><head>%s</head><body><h1>DebugBar</h1><p>Response:</p><pre>%s</pre>%s</body></html>';
         $escapedOutResponseBody = htmlspecialchars($outResponseBody);
         $result = sprintf($template, $head, $escapedOutResponseBody, $body);
 
-        return new HtmlResponse($result);
+        $stream = $this->streamFactory->createStream($result);
+
+        return $this->responseFactory->createResponse(200)
+            ->withBody($stream)
+            ->withAddedHeader('Content-type', 'text/html');
     }
 
     private function attachDebugBarToResponse(Response $response): Response
@@ -122,11 +129,11 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         }
 
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
-        $stream = new Stream($fullPathToFile, 'r');
+        $stream = $this->streamFactory->createStreamFromResource(fopen($fullPathToFile, 'r'));
 
-        return new DiactorosResponse($stream, 200, [
-            'Content-type' => $contentType,
-        ]);
+        return $this->responseFactory->createResponse(200)
+            ->withBody($stream)
+            ->withAddedHeader('Content-type', $contentType);
     }
 
     private function extractPath(UriInterface $uri): string
@@ -179,5 +186,48 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         $statusCode = $response->getStatusCode();
 
         return ($statusCode >= 300 || $statusCode < 400) && $response->getHeaderLine('Location') !== '';
+    }
+
+    private function serializeResponse(Response $response) : string
+    {
+        $reasonPhrase = $response->getReasonPhrase();
+        $headers      = $this->serializeHeaders($response->getHeaders());
+        $body         = (string) $response->getBody();
+        $format       = 'HTTP/%s %d%s%s%s';
+
+        if (! empty($headers)) {
+            $headers = "\r\n" . $headers;
+        }
+
+        $headers .= "\r\n\r\n";
+
+        return sprintf(
+            $format,
+            $response->getProtocolVersion(),
+            $response->getStatusCode(),
+            ($reasonPhrase ? ' ' . $reasonPhrase : ''),
+            $headers,
+            $body
+        );
+    }
+
+    private function serializeHeaders(array $headers) : string
+    {
+        $lines = [];
+        foreach ($headers as $header => $values) {
+            $normalized = $this->filterHeader($header);
+            foreach ($values as $value) {
+                $lines[] = sprintf('%s: %s', $normalized, $value);
+            }
+        }
+
+        return implode("\r\n", $lines);
+    }
+
+    private function filterHeader(string $header) : string
+    {
+        $filtered = str_replace('-', ' ', $header);
+        $filtered = ucwords($filtered);
+        return str_replace(' ', '-', $filtered);
     }
 }

@@ -8,7 +8,9 @@ use org\bovigo\vfs\vfsStream;
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
 use PHPUnit\Framework\TestCase;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ResponseFactory;
 use Zend\Diactoros\ServerRequest;
+use Zend\Diactoros\StreamFactory;
 use Zend\Diactoros\Uri;
 
 /**
@@ -26,8 +28,10 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->debugbarRenderer = $this->getMockBuilder(JavascriptRenderer::class)->disableOriginalConstructor()->getMock();
         $this->debugbarRenderer->method('renderHead')->willReturn('RenderHead');
         $this->debugbarRenderer->method('render')->willReturn('RenderBody');
+        $responseFactory = new ResponseFactory();
+        $streamFactory = new StreamFactory();
 
-        $this->middleware = new PhpDebugBarMiddleware($this->debugbarRenderer);
+        $this->middleware = new PhpDebugBarMiddleware($this->debugbarRenderer, $responseFactory, $streamFactory);
     }
 
     public function testTwoPassCallingForCompatibility(): void
