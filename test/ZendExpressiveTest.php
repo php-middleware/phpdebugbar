@@ -6,10 +6,14 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 use PhpMiddleware\PhpDebugBar\ConfigProvider;
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ResponseFactory;
 use Zend\Diactoros\ServerRequestFactory;
+use Zend\Diactoros\StreamFactory;
 use Zend\Expressive\Container\ApplicationFactory;
 use Zend\Expressive\Container\MiddlewareContainerFactory;
 use Zend\Expressive\Container\MiddlewareFactoryFactory;
@@ -98,8 +102,12 @@ final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
         $serviceManagerConfig['factories'][ResponseInterface::class] = ResponseFactoryFactory::class;
         $serviceManagerConfig['factories'][RouteMiddleware::class] = RouteMiddlewareFactory::class;
         $serviceManagerConfig['factories'][DispatchMiddleware::class] = DispatchMiddlewareFactory::class;
+        $serviceManagerConfig['factories'][ResponseFactory::class] = InvokableFactory::class;
+        $serviceManagerConfig['factories'][StreamFactory::class] = InvokableFactory::class;
         $serviceManagerConfig['aliases'][RouterInterface::class] = FastRouteRouter::class;
         $serviceManagerConfig['aliases'][\Zend\Expressive\ApplicationPipeline::class] = MiddlewarePipe::class;
+        $serviceManagerConfig['aliases'][ResponseFactoryInterface::class] = ResponseFactory::class;
+        $serviceManagerConfig['aliases'][StreamFactoryInterface::class] = StreamFactory::class;
 
         return new ServiceManager($serviceManagerConfig);
     }

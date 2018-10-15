@@ -10,7 +10,7 @@ final class ConfigCollectorFactory
 {
     public function __invoke(ContainerInterface $container): ConfigCollector
     {
-        $data = $container->get('config');
+        $data = $container->get(ConfigProvider::class);
 
         return new ConfigCollector($data, 'Config');
     }

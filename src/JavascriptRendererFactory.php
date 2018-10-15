@@ -9,26 +9,13 @@ use Psr\Container\ContainerInterface;
 
 final class JavascriptRendererFactory
 {
-    public function __invoke(ContainerInterface $container = null): JavascriptRenderer
+    public function __invoke(ContainerInterface $container): JavascriptRenderer
     {
-        if ($container === null || !$container->has(DebugBar::class)) {
-            $debugbar = (new StandardDebugBarFactory())($container);
-        } else {
-            $debugbar = $container->get(DebugBar::class);
-        }
+        $debugbar = $container->get(DebugBar::class);
+        $config = $container->get(ConfigProvider::class);
+        $rendererOptions = $config['phpmiddleware']['phpdebugbar']['javascript_renderer'];
 
         $renderer = new JavascriptRenderer($debugbar);
-
-        $config = $container !== null && $container->has('config') ? $container->get('config') : [];
-
-        if (isset($config['phpmiddleware']['phpdebugbar']['javascript_renderer'])) {
-            $rendererOptions = $config['phpmiddleware']['phpdebugbar']['javascript_renderer'];
-        } else {
-            $rendererOptions = [
-                'base_url' => '/phpdebugbar',
-            ];
-        }
-
         $renderer->setOptions($rendererOptions);
 
         return $renderer;

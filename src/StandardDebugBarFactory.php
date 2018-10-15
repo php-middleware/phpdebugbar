@@ -8,24 +8,25 @@ use Psr\Container\ContainerInterface;
 
 final class StandardDebugBarFactory
 {
-    public function __invoke(ContainerInterface $container = null): StandardDebugBar
+    public function __invoke(ContainerInterface $container): StandardDebugBar
     {
         $debugBar = new StandardDebugBar();
 
-        if ($container !== null) {
-            $config = $container->has('config') ? $container->get('config') : [];
+        $config = $container->get(ConfigProvider::class);
 
-            $collectors = $config['phpmiddleware']['phpdebugbar']['collectors'] ?: [];
+        $collectors = $config['phpmiddleware']['phpdebugbar']['collectors'];
 
-            foreach ($collectors as $collectorName) {
-                $collector = $container->get($collectorName);
-                $debugBar->addCollector($collector);
-            }
+        foreach ($collectors as $collectorName) {
+            $collector = $container->get($collectorName);
+            $debugBar->addCollector($collector);
+        }
 
-            if (isset($config['phpmiddleware']['phpdebugbar']['storage']) && is_string($config['phpmiddleware']['phpdebugbar']['storage'])) {
-                $storage = $container->get($config['phpmiddleware']['phpdebugbar']['storage']);
-                $debugBar->setStorage($config['phpmiddleware']['phpdebugbar']['storage']);
-            }
+        $storage = $config['phpmiddleware']['phpdebugbar']['storage'];
+
+        if (is_string($storage)) {
+            $debugBar->setStorage(
+                $container->get($storage)
+            );
         }
 
         return $debugBar;
