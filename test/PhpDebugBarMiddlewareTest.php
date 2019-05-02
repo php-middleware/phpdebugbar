@@ -27,6 +27,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
     {
         $this->debugbarRenderer = $this->getMockBuilder(JavascriptRenderer::class)->disableOriginalConstructor()->getMock();
         $this->debugbarRenderer->method('renderHead')->willReturn('RenderHead');
+        $this->debugbarRenderer->method('getBaseUrl')->willReturn('/phpdebugbar');
         $this->debugbarRenderer->method('render')->willReturn('RenderBody');
         $responseFactory = new ResponseFactory();
         $streamFactory = new StreamFactory();
@@ -234,8 +235,6 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
     public function testTryToHandleNotExistingStaticFile(): void
     {
-        $this->debugbarRenderer->expects($this->any())->method('getBaseUrl')->willReturn('/phpdebugbar');
-
         $uri = new Uri('http://example.com/phpdebugbar/boo.css');
         $request = new ServerRequest([], [], $uri, null, 'php://memory');
         $response = new Response\HtmlResponse('<html></html>');
@@ -254,7 +253,6 @@ class PhpDebugBarMiddlewareTest extends TestCase
     {
         $root = vfsStream::setup('boo');
 
-        $this->debugbarRenderer->expects($this->any())->method('getBaseUrl')->willReturn('/phpdebugbar');
         $this->debugbarRenderer->expects($this->any())->method('getBasePath')->willReturn(vfsStream::url('boo'));
 
         $uri = new Uri(sprintf('http://example.com/phpdebugbar/debugbar.%s', $extension));
