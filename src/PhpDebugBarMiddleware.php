@@ -46,19 +46,14 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request);
 
-        $forceHeaderValue = $request->getHeaderLine(self::FORCE_KEY);
-        $forceCookieValue = $request->getCookieParams()[self::FORCE_KEY] ?? '';
-        $forceAttibuteValue = $request->getAttribute(self::FORCE_KEY, '');
-        $isForceEnable = in_array('true', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
-        $isForceDisable = in_array('false', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
-
-        if ($isForceDisable || (!$isForceEnable && ($this->isRedirect($response) || !$this->isHtmlAccepted($request)))) {
+        if ($this->shouldReturnResponse($request, $response)) {
             return $response;
         }
 
         if ($this->isHtmlResponse($response)) {
-            return $this->attachDebugBarToResponse($response);
+            return $this->attachDebugBarToHtmlResponse($response);
         }
+
         return $this->prepareHtmlResponseWithDebugBar($response);
     }
 
@@ -82,6 +77,17 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $this->process($request, $handler);
     }
 
+    private function shouldReturnResponse(ServerRequest $request, Response $response): bool
+    {
+        $forceHeaderValue = $request->getHeaderLine(self::FORCE_KEY);
+        $forceCookieValue = $request->getCookieParams()[self::FORCE_KEY] ?? '';
+        $forceAttibuteValue = $request->getAttribute(self::FORCE_KEY, '');
+        $isForceEnable = in_array('true', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
+        $isForceDisable = in_array('false', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
+
+        return $isForceDisable || (!$isForceEnable && ($this->isRedirect($response) || !$this->isHtmlAccepted($request)));
+    }
+
     private function prepareHtmlResponseWithDebugBar(Response $response): Response
     {
         $head = $this->debugBarRenderer->renderHead();
@@ -93,12 +99,12 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $stream = $this->streamFactory->createStream($result);
 
-        return $this->responseFactory->createResponse(200)
+        return $this->responseFactory->createResponse()
             ->withBody($stream)
             ->withAddedHeader('Content-type', 'text/html');
     }
 
-    private function attachDebugBarToResponse(Response $response): Response
+    private function attachDebugBarToHtmlResponse(Response $response): Response
     {
         $head = $this->debugBarRenderer->renderHead();
         $body = $this->debugBarRenderer->render();
@@ -129,9 +135,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         }
 
         $contentType = $this->getContentTypeByFileName($fullPathToFile);
-        $stream = $this->streamFactory->createStreamFromResource(fopen($fullPathToFile, 'r'));
+        $stream = $this->streamFactory->createStreamFromResource(fopen($fullPathToFile, 'rb'));
 
-        return $this->responseFactory->createResponse(200)
+        return $this->responseFactory->createResponse()
             ->withBody($stream)
             ->withAddedHeader('Content-type', $contentType);
     }
@@ -185,14 +191,13 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     {
         $statusCode = $response->getStatusCode();
 
-        return ($statusCode >= 300 || $statusCode < 400) && $response->getHeaderLine('Location') !== '';
+        return $statusCode >= 300 && $statusCode < 400 && $response->getHeaderLine('Location') !== '';
     }
 
     private function serializeResponse(Response $response) : string
     {
         $reasonPhrase = $response->getReasonPhrase();
         $headers      = $this->serializeHeaders($response->getHeaders());
-        $body         = (string) $response->getBody();
         $format       = 'HTTP/%s %d%s%s%s';
 
         if (! empty($headers)) {
@@ -207,7 +212,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
             $response->getStatusCode(),
             ($reasonPhrase ? ' ' . $reasonPhrase : ''),
             $headers,
-            $body
+            $response->getBody()
         );
     }
 

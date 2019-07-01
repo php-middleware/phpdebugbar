@@ -21,6 +21,7 @@ use Zend\Diactoros\Uri;
 class PhpDebugBarMiddlewareTest extends TestCase
 {
     protected $debugbarRenderer;
+    /** @var PhpDebugBarMiddleware */
     protected $middleware;
 
     protected function setUp()
@@ -76,6 +77,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $result = $this->middleware->process($request, $requestHandler);
 
+        $this->assertSame(200, $result->getStatusCode());
         $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
@@ -108,7 +110,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
     public function testAttachToNoneHtmlResponse(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
-        $response = new Response();
+        $response = (new Response())->withHeader('test-header', 'value');
         $response->getBody()->write('ResponseBody');
 
         $requestHandler = new RequestHandlerStub($response);
@@ -117,20 +119,43 @@ class PhpDebugBarMiddlewareTest extends TestCase
 
         $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertNotSame($response, $result);
-        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
+        $this->assertSame("<html><head>RenderHead</head><body><h1>DebugBar</h1><p>Response:</p><pre>HTTP/1.1 200 OK\r\nTest-Header: value\r\n\r\nResponseBody</pre>RenderBody</body></html>", (string) $result->getBody());
     }
 
     public function testNotAttachToRedirectResponse(): void
     {
         $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
-        $response = (new Response())->withStatus(302)->withAddedHeader('Location', 'some-location');
+        $response = (new Response())->withStatus(300)->withAddedHeader('Location', 'some-location');
 
         $requestHandler = new RequestHandlerStub($response);
 
         $result = $this->middleware->process($request, $requestHandler);
 
-        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
         $this->assertSame($response, $result);
+    }
+
+    public function testAttachToNonRedirectResponse(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = (new Response())->withStatus(299)->withAddedHeader('Location', 'some-location');
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertNotSame($response, $result);
+    }
+
+    public function testAttachToNonRedirectResponse2(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html']);
+        $response = (new Response())->withStatus(400)->withAddedHeader('Location', 'some-location');
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertNotSame($response, $result);
     }
 
     public function testAttachToRedirectResponseWithoutLocation(): void
@@ -268,6 +293,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->assertFalse($requestHandler->isCalled(), 'Request handler is called');
         $this->assertNotSame($response, $result);
         $this->assertSame($contentType, $result->getHeaderLine('Content-type'));
+        $this->assertSame(200, $result->getStatusCode());
         $this->assertSame('filecontent', (string) $result->getBody());
     }
 
