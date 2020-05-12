@@ -7,11 +7,11 @@ use DebugBar\JavascriptRenderer;
 use org\bovigo\vfs\vfsStream;
 use PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware;
 use PHPUnit\Framework\TestCase;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\ResponseFactory;
-use Zend\Diactoros\ServerRequest;
-use Zend\Diactoros\StreamFactory;
-use Zend\Diactoros\Uri;
+use Laminas\Diactoros\Response;
+use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\ServerRequest;
+use Laminas\Diactoros\StreamFactory;
+use Laminas\Diactoros\Uri;
 
 /**
  * PhpDebugBarMiddlewareTest
@@ -24,7 +24,7 @@ class PhpDebugBarMiddlewareTest extends TestCase
     /** @var PhpDebugBarMiddleware */
     protected $middleware;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->debugbarRenderer = $this->getMockBuilder(JavascriptRenderer::class)->disableOriginalConstructor()->getMock();
         $this->debugbarRenderer->method('renderHead')->willReturn('RenderHead');
