@@ -5,7 +5,7 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 
 use BadMethodCallException;
 use Psr\Http\Message\ResponseInterface;
-use Zend\HttpHandlerRunner\Emitter\EmitterInterface;
+use Laminas\HttpHandlerRunner\Emitter\EmitterInterface;
 
 final class TestEmitter implements EmitterInterface
 {

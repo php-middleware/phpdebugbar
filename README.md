@@ -31,7 +31,7 @@ You don't need to copy any static assets from phpdebugbar vendor!
 
 Sometimes you want to have control when enable or disable PHP Debug Bar:
 * custom content negotiation,
-* allow to debug redirects responses.
+* allow debug redirects responses.
 
 We allow you to disable attaching phpdebugbar using `X-Enable-Debug-Bar: false` header, cookie or request attribute.
 To force enable just send request with `X-Enable-Debug-Bar` header, cookie or request attribute with `true` value.
@@ -42,14 +42,14 @@ This package isn't require any PSR-7 implementation - you need to provide it by 
 
 #### ... and PSR-11
 
-If you use provided PSR-11 factories, then you container must have services registered as PSR-17 interface's name. Example for [zend-diactoros](https://github.com/zendframework/zend-diactoros) implementation and [Pimple](https://pimple.symfony.com/):
+If you use provided PSR-11 factories, then your container must have services registered as PSR-17 interface's name. Example for [laminas-diactoros](https://github.com/laminas/laminas-diactoros) implementation and [Pimple](https://pimple.symfony.com/):
 
 ```php
-$container[Psr\Http\Message\ResponseInterface::class] = new Zend\Diactoros\ResponseFactory();
-$container[Psr\Http\Message\StreamFactoryInterface] = new Zend\Diactoros\StreamFactory();
+$container[Psr\Http\Message\ResponseInterface::class] = new Laminas\Diactoros\ResponseFactory();
+$container[Psr\Http\Message\StreamFactoryInterface::class] = new Laminas\Diactoros\StreamFactory();
 ```
 
-### How to install on Zend Expressive?
+### How to install on Mezzio?
 
 You need to register `PhpMiddleware\PhpDebugBar\ConfigProvider` and pipe provided middleware:
 
@@ -57,7 +57,7 @@ You need to register `PhpMiddleware\PhpDebugBar\ConfigProvider` and pipe provide
 $app->pipe(\PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware::class);
 ```
 
-For more - follow Zend Expressive [documentation](https://docs.zendframework.com/zend-expressive/v3/features/modular-applications/).
+For more - follow Mezzio [documentation](https://docs.mezzio.dev/mezzio/v3/features/modular-applications/).
 
 ### How to install on Slim 3?
 
@@ -79,7 +79,7 @@ $app->add(
 
 ### How to configure using existing factories?
 
-Put array with configuration into `PhpMiddleware\PhpDebugBar\ConfigProvider` service in your container:
+Put array with a configuration into `PhpMiddleware\PhpDebugBar\ConfigProvider` service in your container:
 
 ```php
 return [
@@ -106,7 +106,7 @@ return array_merge(PhpMiddleware\PhpDebugBar\ConfigProvider::getConfig(), $myOve
 ## It's just works with any modern php framework!
 
 Middleware tested on:
-* [Zend Expressive](https://github.com/zendframework/zend-expressive)
+* [Mezzio](https://github.com/mezzio/mezzio)
 * [Slim 3.x](https://github.com/slimphp/Slim)
 
 And any other modern framework [supported PSR-17 middlewares and PSR-7](https://mwop.net/blog/2015-01-08-on-http-middleware-and-psr-7.html).

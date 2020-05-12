@@ -14,7 +14,7 @@ final class ConfigProvider
     {
         $config = include __DIR__ . '/../config/phpdebugbar.config.php';
         $config['dependencies'] = include __DIR__ . '/../config/dependency.config.php';
-        $config['middleware_pipeline'] = include __DIR__ . '/../config/zend-expressive.middleware_pipeline.config.php';
+        $config['middleware_pipeline'] = include __DIR__ . '/../config/mezzio.middleware_pipeline.config.php';
 
         return $config;
     }

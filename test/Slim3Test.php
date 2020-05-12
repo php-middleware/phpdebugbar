@@ -10,8 +10,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Slim\App;
 use Slim\Http\Environment;
-use Zend\Diactoros\ResponseFactory;
-use Zend\Diactoros\StreamFactory;
+use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\StreamFactory;
 
 final class Slim3Test extends AbstractMiddlewareRunnerTest
 {

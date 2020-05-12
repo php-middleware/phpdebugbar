@@ -6,7 +6,7 @@ namespace PhpMiddlewareTest\PhpDebugBar;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response;
+use Laminas\Diactoros\Response;
 
 abstract class AbstractMiddlewareRunnerTest extends TestCase
 {
@@ -27,9 +27,9 @@ abstract class AbstractMiddlewareRunnerTest extends TestCase
 
         $responseBody = (string) $response->getBody();
 
-        $this->assertContains('var phpdebugbar = new PhpDebugBar.DebugBar();', $responseBody);
-        $this->assertContains('Hello!', $responseBody);
-        $this->assertContains('"/phpdebugbar/debugbar.js"', $responseBody);
+        $this->assertStringContainsString('var phpdebugbar = new PhpDebugBar.DebugBar();', $responseBody);
+        $this->assertStringContainsString('Hello!', $responseBody);
+        $this->assertStringContainsString('"/phpdebugbar/debugbar.js"', $responseBody);
     }
 
     final public function testGetStatics(): void
@@ -53,7 +53,7 @@ abstract class AbstractMiddlewareRunnerTest extends TestCase
 
         $contentType = $response->getHeaderLine('Content-type');
 
-        $this->assertContains('text/javascript', $contentType);
+        $this->assertStringContainsString('text/javascript', $contentType);
     }
 
     abstract protected function dispatchApplication(array $server, array $pipe = []): ResponseInterface;

@@ -10,35 +10,35 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\ResponseFactory;
-use Zend\Diactoros\ServerRequestFactory;
-use Zend\Diactoros\StreamFactory;
-use Zend\Expressive\Container\ApplicationFactory;
-use Zend\Expressive\Container\MiddlewareContainerFactory;
-use Zend\Expressive\Container\MiddlewareFactoryFactory;
-use Zend\Expressive\Container\RequestHandlerRunnerFactory;
-use Zend\Expressive\Container\ResponseFactoryFactory;
-use Zend\Expressive\Container\ServerRequestErrorResponseGeneratorFactory;
-use Zend\Expressive\MiddlewareContainer;
-use Zend\Expressive\MiddlewareFactory;
-use Zend\Expressive\Response\ServerRequestErrorResponseGenerator;
-use Zend\Expressive\Router\FastRouteRouter;
-use Zend\Expressive\Router\FastRouteRouterFactory;
-use Zend\Expressive\Router\Middleware\DispatchMiddleware;
-use Zend\Expressive\Router\Middleware\DispatchMiddlewareFactory;
-use Zend\Expressive\Router\Middleware\RouteMiddleware;
-use Zend\Expressive\Router\Middleware\RouteMiddlewareFactory;
-use Zend\Expressive\Router\RouteCollector;
-use Zend\Expressive\Router\RouteCollectorFactory;
-use Zend\Expressive\Router\RouterInterface;
-use Zend\HttpHandlerRunner\Emitter\EmitterInterface;
-use Zend\HttpHandlerRunner\RequestHandlerRunner;
-use Zend\ServiceManager\Factory\InvokableFactory;
-use Zend\ServiceManager\ServiceManager;
-use Zend\Stratigility\MiddlewarePipe;
+use Laminas\Diactoros\Response;
+use Laminas\Diactoros\ResponseFactory;
+use Laminas\Diactoros\ServerRequestFactory;
+use Laminas\Diactoros\StreamFactory;
+use Mezzio\Container\ApplicationFactory;
+use Mezzio\Container\MiddlewareContainerFactory;
+use Mezzio\Container\MiddlewareFactoryFactory;
+use Mezzio\Container\RequestHandlerRunnerFactory;
+use Mezzio\Container\ResponseFactoryFactory;
+use Mezzio\Container\ServerRequestErrorResponseGeneratorFactory;
+use Mezzio\MiddlewareContainer;
+use Mezzio\MiddlewareFactory;
+use Mezzio\Response\ServerRequestErrorResponseGenerator;
+use Mezzio\Router\FastRouteRouter;
+use Mezzio\Router\FastRouteRouterFactory;
+use Mezzio\Router\Middleware\DispatchMiddleware;
+use Mezzio\Router\Middleware\DispatchMiddlewareFactory;
+use Mezzio\Router\Middleware\RouteMiddleware;
+use Mezzio\Router\Middleware\RouteMiddlewareFactory;
+use Mezzio\Router\RouteCollector;
+use Mezzio\Router\RouteCollectorFactory;
+use Mezzio\Router\RouterInterface;
+use Laminas\HttpHandlerRunner\Emitter\EmitterInterface;
+use Laminas\HttpHandlerRunner\RequestHandlerRunner;
+use Laminas\ServiceManager\Factory\InvokableFactory;
+use Laminas\ServiceManager\ServiceManager;
+use Laminas\Stratigility\MiddlewarePipe;
 
-final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
+final class MezzioTest extends AbstractMiddlewareRunnerTest
 {
     final public function testContainsConfigCollectorOutput(): void
     {
@@ -56,7 +56,7 @@ final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
 
         $responseBody = (string) $response->getBody();
 
-        $this->assertContains('DebugBar\\\DataCollector\\\ConfigCollector', $responseBody);
+        $this->assertStringContainsString('DebugBar\\\DataCollector\\\ConfigCollector', $responseBody);
     }
 
     protected function dispatchApplication(array $server, array $pipe = []): ResponseInterface
@@ -105,7 +105,7 @@ final class ZendExpressiveTest extends AbstractMiddlewareRunnerTest
         $serviceManagerConfig['factories'][ResponseFactory::class] = InvokableFactory::class;
         $serviceManagerConfig['factories'][StreamFactory::class] = InvokableFactory::class;
         $serviceManagerConfig['aliases'][RouterInterface::class] = FastRouteRouter::class;
-        $serviceManagerConfig['aliases'][\Zend\Expressive\ApplicationPipeline::class] = MiddlewarePipe::class;
+        $serviceManagerConfig['aliases'][\Mezzio\ApplicationPipeline::class] = MiddlewarePipe::class;
         $serviceManagerConfig['aliases'][ResponseFactoryInterface::class] = ResponseFactory::class;
         $serviceManagerConfig['aliases'][StreamFactoryInterface::class] = StreamFactory::class;
 
