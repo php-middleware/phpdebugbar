@@ -28,8 +28,7 @@
         "mezzio/mezzio": "^3.0",
         "mezzio/mezzio-fastroute": "^3.0.1",
         "laminas/laminas-servicemanager": "^3.3.2",
-        "laminas/laminas-diactoros": "^2.0",
-        "infection/infection": "^0.18.2"
+        "laminas/laminas-diactoros": "^2.0"
     },
     "autoload": {
         "psr-4": {
