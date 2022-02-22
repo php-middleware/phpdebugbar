@@ -27,7 +27,8 @@
         "mezzio/mezzio": "^3.0",
         "mezzio/mezzio-fastroute": "^3.0.1",
         "laminas/laminas-servicemanager": "^3.3.2",
-        "laminas/laminas-diactoros": "^2.0"
+        "laminas/laminas-diactoros": "^2.0",
+        "phpstan/phpstan": "^1.4"
     },
     "autoload": {
         "psr-4": {
@@ -40,5 +41,3 @@
         }
     }
 }
-
-

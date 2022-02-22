@@ -216,6 +216,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         );
     }
 
+    /**
+     * @param array<string, array<string>> $headers
+     */
     private function serializeHeaders(array $headers) : string
     {
         $lines = [];

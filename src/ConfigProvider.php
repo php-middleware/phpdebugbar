@@ -5,11 +5,17 @@ namespace PhpMiddleware\PhpDebugBar;
 
 final class ConfigProvider
 {
+    /**
+     * @return array<string, mixed>
+     */
     public static function getConfig(): array
     {
         return (new self())();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function __invoke(): array
     {
         $config = include __DIR__ . '/../config/phpdebugbar.config.php';

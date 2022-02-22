@@ -3,7 +3,23 @@ on:
     - push
     - pull_request
 jobs:
-    build:
+    phpstan:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout
+                uses: actions/checkout@v2
+
+            -   name: Setup PHP, with composer and extensions
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: 7.3
+
+            -   name: Install dependencies with Composer
+                uses: ramsey/composer-install@v1
+
+            -   name: Run phpstan
+                run: vendor/bin/phpstan analyse --level=6 src/
+    tests:
         strategy:
             matrix:
                 dependencies:
