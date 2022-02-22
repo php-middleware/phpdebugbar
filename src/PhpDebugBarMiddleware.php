@@ -21,8 +21,19 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
     public const FORCE_KEY = 'X-Enable-Debug-Bar';
 
+    /**
+     * @var DebugBarRenderer
+     */
     private $debugBarRenderer;
+
+    /**
+     * @var ResponseFactoryInterface
+     */
     private $responseFactory;
+
+    /**
+     * @var StreamFactoryInterface
+     */
     private $streamFactory;
 
     public function __construct(
@@ -60,7 +71,14 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     public function __invoke(ServerRequest $request, Response $response, callable $next): Response
     {
         $handler = new class($next, $response) implements RequestHandler {
+            /**
+             * @var callable
+             */
             private $next;
+
+            /**
+             * @var Response
+             */
             private $response;
 
             public function __construct(callable $next, Response $response)
