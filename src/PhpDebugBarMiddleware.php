@@ -21,16 +21,27 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 {
     public const FORCE_KEY = 'X-Enable-Debug-Bar';
 
+    /**
+     * @var DebugBarRenderer
+     */
     private $debugBarRenderer;
+
+    /**
+     * @var ResponseFactoryInterface
+     */
     private $responseFactory;
+
+    /**
+     * @var StreamFactoryInterface
+     */
     private $streamFactory;
 
     public function __construct(
-        DebugBarRenderer $debugbarRenderer,
+        DebugBarRenderer $debugBarRenderer,
         ResponseFactoryInterface $responseFactory,
         StreamFactoryInterface $streamFactory
     ) {
-        $this->debugBarRenderer = $debugbarRenderer;
+        $this->debugBarRenderer = $debugBarRenderer;
         $this->responseFactory = $responseFactory;
         $this->streamFactory = $streamFactory;
     }
@@ -60,7 +71,14 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     public function __invoke(ServerRequest $request, Response $response, callable $next): Response
     {
         $handler = new class($next, $response) implements RequestHandler {
+            /**
+             * @var callable
+             */
             private $next;
+
+            /**
+             * @var Response
+             */
             private $response;
 
             public function __construct(callable $next, Response $response)
@@ -81,9 +99,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     {
         $forceHeaderValue = $request->getHeaderLine(self::FORCE_KEY);
         $forceCookieValue = $request->getCookieParams()[self::FORCE_KEY] ?? '';
-        $forceAttibuteValue = $request->getAttribute(self::FORCE_KEY, '');
-        $isForceEnable = in_array('true', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
-        $isForceDisable = in_array('false', [$forceHeaderValue, $forceCookieValue, $forceAttibuteValue], true);
+        $forceAttributeValue = $request->getAttribute(self::FORCE_KEY, '');
+        $isForceEnable = in_array('true', [$forceHeaderValue, $forceCookieValue, $forceAttributeValue], true);
+        $isForceDisable = in_array('false', [$forceHeaderValue, $forceCookieValue, $forceAttributeValue], true);
 
         return $isForceDisable || (!$isForceEnable && ($this->isRedirect($response) || !$this->isHtmlAccepted($request)));
     }
@@ -169,22 +187,22 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
             'woff2' => 'application/font-woff2',
         ];
 
-        return isset($map[$ext]) ? $map[$ext] : 'text/plain';
+        return $map[$ext] ?? 'text/plain';
     }
 
     private function isHtmlResponse(Response $response): bool
     {
-        return $this->hasHeaderContains($response, 'Content-Type', 'text/html');
+        return $this->isHtml($response, 'Content-Type');
     }
 
     private function isHtmlAccepted(ServerRequest $request): bool
     {
-        return $this->hasHeaderContains($request, 'Accept', 'text/html');
+        return $this->isHtml($request, 'Accept');
     }
 
-    private function hasHeaderContains(MessageInterface $message, string $headerName, string $value): bool
+    private function isHtml(MessageInterface $message, string $headerName): bool
     {
-        return strpos($message->getHeaderLine($headerName), $value) !== false;
+        return strpos($message->getHeaderLine($headerName), 'text/html') !== false;
     }
 
     private function isRedirect(Response $response): bool
@@ -216,6 +234,9 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         );
     }
 
+    /**
+     * @param array<string, array<string>> $headers
+     */
     private function serializeHeaders(array $headers) : string
     {
         $lines = [];

@@ -11,11 +11,11 @@ final class JavascriptRendererFactory
 {
     public function __invoke(ContainerInterface $container): JavascriptRenderer
     {
-        $debugbar = $container->get(DebugBar::class);
+        $debugBar = $container->get(DebugBar::class);
         $config = $container->get(ConfigProvider::class);
         $rendererOptions = $config['phpmiddleware']['phpdebugbar']['javascript_renderer'];
 
-        $renderer = new JavascriptRenderer($debugbar);
+        $renderer = new JavascriptRenderer($debugBar);
         $renderer->setOptions($rendererOptions);
 
         return $renderer;

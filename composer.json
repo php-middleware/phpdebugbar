@@ -16,9 +16,8 @@
         "maximebf/debugbar": "^1.4",
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
-        "psr/container": "^1.0",
-        "psr/http-message": "^1.0.1",
-        "psr/http-factory": "^1.0",
+        "psr/container-implementation": "^1.0 || ^2.0",
+        "psr/http-message-implementation": "^1.0",
         "psr/http-factory-implementation": "^1.0"
     },
     "require-dev": {
@@ -28,7 +27,8 @@
         "mezzio/mezzio": "^3.0",
         "mezzio/mezzio-fastroute": "^3.0.1",
         "laminas/laminas-servicemanager": "^3.3.2",
-        "laminas/laminas-diactoros": "^2.0"
+        "laminas/laminas-diactoros": "^2.0",
+        "phpstan/phpstan": "^1.4"
     },
     "autoload": {
         "psr-4": {
