@@ -57,15 +57,17 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
         $response = $handler->handle($request);
 
-        if ($this->shouldReturnResponse($request, $response)) {
+        $isAjax = strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
+
+        if ($this->shouldReturnResponse($request, $response) && ! $isAjax) {
             return $response;
         }
 
         if ($this->isHtmlResponse($response)) {
-            return $this->attachDebugBarToHtmlResponse($response);
+            return $this->attachDebugBarToHtmlResponse($response,$isAjax);
         }
 
-        return $this->prepareHtmlResponseWithDebugBar($response);
+        return $this->prepareHtmlResponseWithDebugBar($response,$isAjax);
     }
 
     public function __invoke(ServerRequest $request, Response $response, callable $next): Response
@@ -106,10 +108,10 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         return $isForceDisable || (!$isForceEnable && ($this->isRedirect($response) || !$this->isHtmlAccepted($request)));
     }
 
-    private function prepareHtmlResponseWithDebugBar(Response $response): Response
+    private function prepareHtmlResponseWithDebugBar(Response $response,bool $isAjax): Response
     {
         $head = $this->debugBarRenderer->renderHead();
-        $body = $this->debugBarRenderer->render();
+        $body = $this->debugBarRenderer->render(!$isAjax);
         $outResponseBody = $this->serializeResponse($response);
         $template = '<html><head>%s</head><body><h1>DebugBar</h1><p>Response:</p><pre>%s</pre>%s</body></html>';
         $escapedOutResponseBody = htmlspecialchars($outResponseBody);
@@ -122,10 +124,10 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
             ->withAddedHeader('Content-type', 'text/html');
     }
 
-    private function attachDebugBarToHtmlResponse(Response $response): Response
+    private function attachDebugBarToHtmlResponse(Response $response,bool $isAjax): Response
     {
         $head = $this->debugBarRenderer->renderHead();
-        $body = $this->debugBarRenderer->render();
+        $body = $this->debugBarRenderer->render(!$isAjax);
         $responseBody = $response->getBody();
 
         if (! $responseBody->eof() && $responseBody->isSeekable()) {
