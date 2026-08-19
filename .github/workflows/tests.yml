@@ -1,38 +1,57 @@
 name: CI
 on:
-    - push
+    push:
+        branches:
+            - master
+    pull_request:
 jobs:
     phpstan:
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v4
 
             -   name: Setup PHP, with composer and extensions
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: 7.3
+                    php-version: '8.0'
 
             -   name: Install dependencies with Composer
-                uses: ramsey/composer-install@v1
+                uses: ramsey/composer-install@v3
 
             -   name: Run phpstan
                 run: vendor/bin/phpstan analyse --level=6 src/
     tests:
         strategy:
+            fail-fast: false
             matrix:
                 dependencies:
                     - highest
                     - lowest
+                # PHP 7.3 and 7.4 are not built here: no laminas-diactoros release
+                # that Composer 2.10+ accepts as a psr/http-factory-implementation
+                # provider supports them, so the dev dependencies cannot even be
+                # installed on those versions.
                 php-versions:
-                    - 7.3
-                    - 7.4
-                    - 8.0
-                    - 8.1
+                    - '8.0'
+                    - '8.1'
+                    - '8.2'
+                    - '8.3'
+                exclude:
+                    # Lowest bounds of the dev dependencies (Slim 3.0, Pimple 3.0,
+                    # vfsStream 1.6.8) were released before PHP 8.1 and fatal on load
+                    # there. That is a limitation of those old releases, not of this
+                    # library: every tested PHP version is covered by the highest jobs.
+                    -   dependencies: lowest
+                        php-versions: '8.1'
+                    -   dependencies: lowest
+                        php-versions: '8.2'
+                    -   dependencies: lowest
+                        php-versions: '8.3'
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout
-                uses: actions/checkout@v2
+                uses: actions/checkout@v4
 
             -   name: Setup PHP, with composer and extensions
                 uses: shivammathur/setup-php@v2
@@ -40,7 +59,7 @@ jobs:
                     php-version: ${{ matrix.php-versions }}
 
             -   name: Install dependencies with Composer
-                uses: ramsey/composer-install@v1
+                uses: ramsey/composer-install@v3
                 with:
                     dependency-versions: ${{ matrix.dependencies }}
 
