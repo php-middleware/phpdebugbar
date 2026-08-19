@@ -12,7 +12,6 @@ use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Http\Message\UriInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use Slim\Http\Uri as SlimUri;
 
 /**
  * @author Witold Wasiczko <witold@wasiczko.pl>
@@ -168,9 +167,11 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
 
     private function extractPath(UriInterface $uri): string
     {
-        // Slim3 compatibility
-        if ($uri instanceof SlimUri) {
-            $basePath = $uri->getBasePath();
+        // Slim3 compatibility: Slim\Http\Uri is duck-typed so slim/slim is not
+        // needed at analysis time (dev dependencies ship Slim 4, which has no
+        // such class).
+        if (method_exists($uri, 'getBasePath')) {
+            $basePath = (string) $uri->getBasePath();
             if (!empty($basePath)) {
                 return $basePath;
             }

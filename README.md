@@ -67,6 +67,16 @@ $app->pipe(\PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware::class);
 
 For more - follow Mezzio [documentation](https://docs.mezzio.dev/mezzio/v3/features/modular-applications/).
 
+### How to install on Slim 4?
+
+Register factories in a PSR-11 container of your choice, then add the middleware
+resolved from the container:
+
+```php
+$app = \Slim\Factory\AppFactory::create();
+$app->add($container->get(\PhpMiddleware\PhpDebugBar\PhpDebugBarMiddleware::class));
+```
+
 ### How to install on Slim 3?
 
 Register factories in container:
@@ -115,6 +125,6 @@ return array_merge(PhpMiddleware\PhpDebugBar\ConfigProvider::getConfig(), $myOve
 
 Middleware tested on:
 * [Mezzio](https://github.com/mezzio/mezzio)
-* [Slim 3.x](https://github.com/slimphp/Slim)
+* [Slim 4.x](https://github.com/slimphp/Slim)
 
 And any other modern framework [supported PSR-17 middlewares and PSR-7](https://mwop.net/blog/2015-01-08-on-http-middleware-and-psr-7.html).
