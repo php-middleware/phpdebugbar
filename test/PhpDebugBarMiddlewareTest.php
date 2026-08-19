@@ -29,7 +29,9 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->debugbarRenderer = $this->getMockBuilder(JavascriptRenderer::class)->disableOriginalConstructor()->getMock();
         $this->debugbarRenderer->method('renderHead')->willReturn('RenderHead');
         $this->debugbarRenderer->method('getBaseUrl')->willReturn('/phpdebugbar');
-        $this->debugbarRenderer->method('render')->willReturn('RenderBody');
+        $this->debugbarRenderer->method('render')->willReturnCallback(function (bool $initialize = true): string {
+            return $initialize ? 'RenderBody' : 'RenderBodyWithoutInit';
+        });
         $responseFactory = new ResponseFactory();
         $streamFactory = new StreamFactory();
 
@@ -240,6 +242,45 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $result = $this->middleware->process($request, $requestHandler);
 
         $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame('ResponseBody', (string) $result->getBody());
+    }
+
+    public function testNotRenderInitializationCodeForXmlHttpRequest(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Requested-With' => 'XMLHttpRequest']);
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertTrue($requestHandler->isCalled(), 'Request handler is not called');
+        $this->assertSame($response, $result);
+        $this->assertSame('ResponseBodyRenderBodyWithoutInit', (string) $result->getBody());
+    }
+
+    public function testNotRenderInitializationCodeForLowercasedXmlHttpRequestHeaderValue(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Requested-With' => 'xmlhttprequest']);
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertSame('ResponseBodyRenderBodyWithoutInit', (string) $result->getBody());
+    }
+
+    public function testNotAttachDebugbarToXmlHttpRequestIfForceDisabled(): void
+    {
+        $request = new ServerRequest([], [], null, null, 'php://input', ['Accept' => 'text/html', 'X-Requested-With' => 'XMLHttpRequest', 'X-Enable-Debug-Bar' => 'false']);
+        $response = new Response('php://memory', 200, ['Content-Type' => 'text/html']);
+        $response->getBody()->write('ResponseBody');
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
         $this->assertSame($response, $result);
         $this->assertSame('ResponseBody', (string) $result->getBody());
     }
