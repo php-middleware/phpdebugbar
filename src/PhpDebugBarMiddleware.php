@@ -62,7 +62,7 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
         }
 
         if ($this->isHtmlResponse($response)) {
-            return $this->attachDebugBarToHtmlResponse($response);
+            return $this->attachDebugBarToHtmlResponse($response, !$this->isXmlHttpRequest($request));
         }
 
         return $this->prepareHtmlResponseWithDebugBar($response);
@@ -122,10 +122,16 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
             ->withAddedHeader('Content-type', 'text/html');
     }
 
-    private function attachDebugBarToHtmlResponse(Response $response): Response
+    /**
+     * @param bool $initialize Render the debug bar initialization code and assets.
+     *                         Must be false for responses attached to an already
+     *                         initialized debug bar (XMLHttpRequest), otherwise a
+     *                         second debug bar is created on top of the existing one.
+     */
+    private function attachDebugBarToHtmlResponse(Response $response, bool $initialize = true): Response
     {
-        $head = $this->debugBarRenderer->renderHead();
-        $body = $this->debugBarRenderer->render();
+        $head = $initialize ? $this->debugBarRenderer->renderHead() : '';
+        $body = $this->debugBarRenderer->render($initialize);
         $responseBody = $response->getBody();
 
         if (! $responseBody->eof() && $responseBody->isSeekable()) {
@@ -203,6 +209,11 @@ final class PhpDebugBarMiddleware implements MiddlewareInterface
     private function isHtml(MessageInterface $message, string $headerName): bool
     {
         return strpos($message->getHeaderLine($headerName), 'text/html') !== false;
+    }
+
+    private function isXmlHttpRequest(ServerRequest $request): bool
+    {
+        return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
     }
 
     private function isRedirect(Response $response): bool

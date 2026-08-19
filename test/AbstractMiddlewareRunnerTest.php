@@ -32,6 +32,27 @@ abstract class AbstractMiddlewareRunnerTest extends TestCase
         $this->assertStringContainsString('"/phpdebugbar/debugbar.js"', $responseBody);
     }
 
+    final public function testNotAppendInitializationCodeIntoXmlHttpRequestContent(): void
+    {
+        $response = $this->dispatchApplication([
+            'REQUEST_URI' => '/hello',
+            'REQUEST_METHOD' => 'GET',
+            'HTTP_ACCEPT' => 'text/html',
+            'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+        ], [
+            '/hello' => function (ServerRequestInterface $request) {
+                return new Response\HtmlResponse('Hello!');
+            },
+        ]);
+
+        $responseBody = (string) $response->getBody();
+
+        $this->assertStringContainsString('Hello!', $responseBody);
+        $this->assertStringContainsString('phpdebugbar.addDataSet(', $responseBody);
+        $this->assertStringNotContainsString('var phpdebugbar = new PhpDebugBar.DebugBar();', $responseBody);
+        $this->assertStringNotContainsString('"/phpdebugbar/debugbar.js"', $responseBody);
+    }
+
     final public function testGetStatics(): void
     {
         $response = $this->dispatchApplication([

@@ -36,6 +36,14 @@ Sometimes you want to have control when enable or disable PHP Debug Bar:
 We allow you to disable attaching phpdebugbar using `X-Enable-Debug-Bar: false` header, cookie or request attribute.
 To force enable just send request with `X-Enable-Debug-Bar` header, cookie or request attribute with `true` value.
 
+### AJAX requests
+
+Requests sent with `X-Requested-With: XMLHttpRequest` are attached to the debug bar
+already initialized by the main request: the middleware appends only the collected data
+of the AJAX request (rendered as a `(ajax)` dataset) instead of the initialization code
+and assets. Without it every AJAX response would create another debug bar on top of the
+existing one.
+
 ### PSR-17
 
 This package isn't require any PSR-7 implementation - you need to provide it by own. Middleware require ResponseFactory and StreamFactory interfaces. [List of existing interfaces](https://packagist.org/providers/psr/http-factory-implementation).
