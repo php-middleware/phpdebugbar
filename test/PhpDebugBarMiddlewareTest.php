@@ -338,6 +338,29 @@ class PhpDebugBarMiddlewareTest extends TestCase
         $this->assertSame('filecontent', (string) $result->getBody());
     }
 
+    public function testHandleStaticFileUsingSlim3UriBasePath(): void
+    {
+        $root = vfsStream::setup('boo');
+
+        $this->debugbarRenderer->expects($this->any())->method('getBasePath')->willReturn(vfsStream::url('boo'));
+
+        // Slim 3 serves the app through a front controller: the script itself is
+        // the base path and the URI path is only "/".
+        $uri = new SlimUriStub('/phpdebugbar/debugbar.js', '/');
+        $request = new ServerRequest([], [], $uri, null, 'php://memory');
+        $response = new Response\HtmlResponse('<html></html>');
+
+        vfsStream::newFile('debugbar.js')->withContent('filecontent')->at($root);
+
+        $requestHandler = new RequestHandlerStub($response);
+
+        $result = $this->middleware->process($request, $requestHandler);
+
+        $this->assertFalse($requestHandler->isCalled(), 'Request handler is called');
+        $this->assertSame('text/javascript', $result->getHeaderLine('Content-type'));
+        $this->assertSame('filecontent', (string) $result->getBody());
+    }
+
     public function getContentTypes(): array
     {
         return [

@@ -37,17 +37,8 @@ jobs:
                     - '8.1'
                     - '8.2'
                     - '8.3'
-                exclude:
-                    # Lowest bounds of the dev dependencies (Slim 3.0, Pimple 3.0,
-                    # vfsStream 1.6.8) were released before PHP 8.1 and fatal on load
-                    # there. That is a limitation of those old releases, not of this
-                    # library: every tested PHP version is covered by the highest jobs.
-                    -   dependencies: lowest
-                        php-versions: '8.1'
-                    -   dependencies: lowest
-                        php-versions: '8.2'
-                    -   dependencies: lowest
-                        php-versions: '8.3'
+                    - '8.4'
+                    - '8.5'
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout
